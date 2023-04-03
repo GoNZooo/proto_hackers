@@ -1,0 +1,7 @@
+.spago
+.psc-ide-port
+deps
+ebin
+output
+.elixir_ls
+_build
