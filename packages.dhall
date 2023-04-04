@@ -107,7 +107,7 @@ let erl-quickcheck-helpers =
         sha256:df6abef567d04b64cef1dd714d1e872d7e7800cf89a9a2184fbb35ccb3c65468
 
 let purerl-test =
-      https://raw.githubusercontent.com/GoNZooo/purerl-test/v0.1.2/spago.dhall
+      https://raw.githubusercontent.com/GoNZooo/purerl-test/v0.1.8/spago.dhall
         sha256:dc58efbdc04ed56d57eb405ee1ec5b592d3415ffeec0d416e65f8c220d8566b2
 
 let overrides =
@@ -125,7 +125,7 @@ let overrides =
       , purerl-test =
         { dependencies = purerl-test.dependencies
         , repo = "https://github.com/GoNZooo/purerl-test.git"
-        , version = "v0.1.2"
+        , version = "v0.1.8"
         }
       }
 

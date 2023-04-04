@@ -10,7 +10,8 @@ defmodule ProtoHackers.MixProject do
       build_embedded: Mix.env() == :prod,
       deps: deps(),
       compilers: [:purerl | Mix.compilers()],
-      erlc_paths: ["output"]
+      erlc_paths: ["output"],
+      releases: releases()
     ]
   end
 
@@ -30,7 +31,15 @@ defmodule ProtoHackers.MixProject do
       {:purerlex, "~> 0.4.2"},
       {:jsx, "~> 3.1"},
       {:gproc, "~> 0.9.0"},
-      {:purerl_test, "~> 0.1.2"}
+      {:purerl_test, "~> 0.1.8"}
+    ]
+  end
+
+  defp releases() do
+    [
+      proto_hackers: [
+        steps: [:assemble, :tar]
+      ]
     ]
   end
 end
