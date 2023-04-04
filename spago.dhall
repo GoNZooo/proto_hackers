@@ -28,11 +28,14 @@ to generate this file without the comments in this block.
   , "erl-quickcheck-helpers"
   , "foldable-traversable"
   , "foreign"
+  , "integers"
   , "maybe"
   , "newtype"
   , "prelude"
   , "purerl-test"
   , "quickcheck"
+  , "simple-json"
+  , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

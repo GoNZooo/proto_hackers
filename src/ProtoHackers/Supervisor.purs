@@ -14,6 +14,7 @@ import Pinto.Supervisor (SupervisorPid)
 import Pinto.Supervisor as Supervisor
 import Pinto.Types (RegistryName(..), StartLinkResult)
 import ProtoHackers.EchoServer as EchoServer
+import ProtoHackers.PrimeServer as PrimeServer
 import ProtoHackers.Supervisor.Helpers as SupervisorHelpers
 
 startLink :: Effect (StartLinkResult SupervisorPid)
@@ -25,6 +26,7 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
     [ SupervisorHelpers.worker "ProtoHackers.TcpEchoServer" elixirEchoServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.EchoServer" (EchoServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirPrimeServer" elixirPrimeServerStartLink
+    , SupervisorHelpers.worker "ProtoHackers.PrimeServer" (PrimeServer.startLink {})
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne

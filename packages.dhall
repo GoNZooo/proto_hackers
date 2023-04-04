@@ -127,6 +127,11 @@ let overrides =
         , repo = "https://github.com/GoNZooo/purerl-test.git"
         , version = "v0.1.8"
         }
+      , erl-kernel =
+        { dependencies = upstream.erl-kernel.dependencies
+        , repo = "https://github.com/GoNZooo/purescript-erl-kernel.git"
+        , version = "SocketPacket-export"
+        }
       }
 
 in  upstream // overrides
