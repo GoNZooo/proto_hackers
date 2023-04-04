@@ -18,7 +18,7 @@ defmodule ProtoHackers.ElixirPrimeServer do
       :gen_tcp.listen(@port,
         mode: :binary,
         active: false,
-        packet_size: @packet_size,
+        # packet_size: @packet_size,
         reuseaddr: true,
         exit_on_close: false,
         packet: :line
