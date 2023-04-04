@@ -5,7 +5,7 @@ defmodule ProtoHackers.ElixirPrimeServer do
 
   alias ProtoHackers.Prime
 
-  @packet_size 1024
+  @packet_size 5 * 1024
   @port 4203
 
   def start_link([]) do
