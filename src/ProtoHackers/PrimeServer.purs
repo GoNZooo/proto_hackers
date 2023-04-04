@@ -98,11 +98,14 @@ handleClient socket = do
               handleClient socket
 
         _other -> do
-          "malformed request\n" # IOData.fromString # Tcp.send socket # void
+          "malformed request" # IOData.fromString # Tcp.send socket # void
           Tcp.close socket
 
     Left ActiveError.ActiveClosed -> do
       Tcp.close socket
+
+    Left ActiveError.ActiveTimeout -> do
+      handleClient socket
 
     Left error -> do
       Logger.error
