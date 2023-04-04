@@ -15,7 +15,6 @@ import Erl.Data.Binary.IOData as IOData
 import Erl.Data.List as List
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Inet as ActiveError
-import Erl.Kernel.Inet as Inet
 import Erl.Kernel.Tcp (TcpSocket)
 import Erl.Kernel.Tcp as AcceptError
 import Erl.Kernel.Tcp as SocketPacket
@@ -25,8 +24,8 @@ import Erl.Types (Timeout(..))
 import Foreign as Foreign
 import Logger as LogType
 import Logger as Logger
-import Pinto (RegistryName(..), RegistryReference(..), StartLinkResult)
-import Pinto.GenServer (CallFn, CastFn, InfoFn, InitFn, InitResult(..), ServerSpec)
+import Pinto (RegistryName(..), StartLinkResult)
+import Pinto.GenServer (InfoFn, InitFn, InitResult(..), ServerSpec)
 import Pinto.GenServer as GenServer
 import Pinto.Timer as Timer
 import ProtoHackers.PrimeServer.Types (Arguments, Message(..), ServerType', State, Pid)
@@ -86,18 +85,17 @@ handleClient socket = do
 
   case maybeLine of
     Right line -> do
-      let (asString :: String) = UnsafeCoerce.unsafeCoerce line
-      case Json.readJSON asString of
+      case line # UnsafeCoerce.unsafeCoerce # Json.readJSON of
         Right ({ method: "isPrime", number } :: PrimeRequest) -> do
           case Int.fromNumber number of
             Just i -> do
               let response = { method: "isPrime", prime: isPrime i }
               response # Json.writeJSON # (_ <> "\n") # IOData.fromString # Tcp.send socket # void
+              handleClient socket
             Nothing -> do
               let response = { method: "isPrime", prime: false }
               response # Json.writeJSON # (_ <> "\n") # IOData.fromString # Tcp.send socket # void
-
-          handleClient socket
+              handleClient socket
 
         _other -> do
           "malformed request\n" # IOData.fromString # Tcp.send socket # void
