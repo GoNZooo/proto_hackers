@@ -31,7 +31,8 @@ defmodule ProtoHackers.MixProject do
       {:purerlex, "~> 0.4.2"},
       {:jsx, "~> 3.1"},
       {:gproc, "~> 0.9.0"},
-      {:purerl_test, "~> 0.1.8"}
+      {:purerl_test, "~> 0.1.8"},
+      {:jason, "~> 1.4.0"}
     ]
   end
 

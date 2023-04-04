@@ -24,6 +24,7 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
   childSpecs = ErlList.fromFoldable
     [ SupervisorHelpers.worker "ProtoHackers.TcpEchoServer" elixirEchoServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.EchoServer" (EchoServer.startLink {})
+    , SupervisorHelpers.worker "ProtoHackers.ElixirPrimeServer" elixirPrimeServerStartLink
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne
@@ -31,3 +32,4 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
   period = Seconds 5.0
 
 foreign import elixirEchoServerStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirPrimeServerStartLink :: Effect (StartLinkResult Pid)
