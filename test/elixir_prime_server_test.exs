@@ -94,6 +94,18 @@ defmodule ElixirPrimeServerTest do
     :gen_tcp.shutdown(socket, :write)
   end
 
+  test "identifies negative numbers as non-prime" do
+    {:ok, socket} = :gen_tcp.connect(@ip, @port, mode: :binary, active: false)
+
+    send_data = (%{method: "isPrime", number: -2} |> Jason.encode!()) <> "\n"
+    :gen_tcp.send(socket, send_data)
+    {:ok, received} = :gen_tcp.recv(socket, 0)
+    as_json = Jason.decode!(received)
+    assert as_json == %{"method" => "isPrime", "prime" => false}
+
+    :gen_tcp.shutdown(socket, :write)
+  end
+
   test "can handle multiple clients at once" do
     client_tasks =
       1..10
