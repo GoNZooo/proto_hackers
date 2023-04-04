@@ -65,7 +65,9 @@ defmodule ProtoHackers.ElixirPrimeServer do
       {:error, :closed} ->
         :ok
 
-      _other ->
+      other ->
+        Logger.error("Error in `handle_client`: #{inspect(other)}")
+
         :gen_tcp.send(socket, "malformed request")
     end
 
@@ -84,7 +86,7 @@ defmodule ProtoHackers.ElixirPrimeServer do
         {:error, :closed}
 
       {:error, reason} ->
-        Logger.error("Error in `read_line`: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 end
