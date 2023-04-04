@@ -20,7 +20,8 @@ defmodule ProtoHackers.ElixirPrimeServer do
         active: false,
         packet_size: @packet_size,
         reuseaddr: true,
-        exit_on_close: false
+        exit_on_close: false,
+        packet: :line
       )
 
     Logger.debug("#{__MODULE__} listening on port #{@port}: #{inspect(socket, pretty: true)}")
