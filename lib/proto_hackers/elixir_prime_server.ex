@@ -63,12 +63,10 @@ defmodule ProtoHackers.ElixirPrimeServer do
         handle_client(socket)
 
       {:error, :closed} ->
-        :gen_tcp.close(socket)
+        :ok
 
       _other ->
         :gen_tcp.send(socket, "malformed request")
-
-        :gen_tcp.shutdown(socket, :write)
     end
 
     :gen_tcp.close(socket)
