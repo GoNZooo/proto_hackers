@@ -4,7 +4,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   require Logger
 
   defmodule State do
-    @enforce_keys [:socket, :prices]
+    @enforce_keys [:socket, :prices, :request_count]
     defstruct @enforce_keys
   end
 
@@ -54,22 +54,26 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   def init(socket) do
     send(self(), :await_request)
 
-    {:ok, %State{socket: socket, prices: MapSet.new()}}
+    {:ok, %State{socket: socket, prices: MapSet.new(), request_count: 0}}
   end
 
   @impl true
   def handle_info(:await_request, %State{socket: socket, prices: prices} = state) do
+    if rem(state.request_count, 5000) == 0 do
+      Logger.debug("#{state.request_count}")
+    end
+
     new_state =
       case get_request(socket) do
         {:ok, %Request.Insert{} = insert} ->
           new_prices = handle_insert(insert, prices)
           send(self(), :await_request)
-          %State{state | prices: new_prices}
+          %State{state | prices: new_prices, request_count: state.request_count + 1}
 
         {:ok, %Request.Query{} = query} ->
           handle_query(socket, query, prices)
           send(self(), :await_request)
-          state
+          %State{state | request_count: state.request_count + 1}
 
         {:error, :invalid_request} ->
           send(self(), :await_request)
