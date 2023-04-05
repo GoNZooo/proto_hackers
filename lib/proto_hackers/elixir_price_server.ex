@@ -19,8 +19,11 @@ defmodule ProtoHackers.ElixirPriceServer do
         active: false,
         reuseaddr: true,
         exit_on_close: false,
-        buffer: 1024
+        buffer: 1024,
+        backlog: 100
       )
+
+    Logger.debug("#{__MODULE__} listening on port #{@port}: #{inspect(socket, pretty: true)}")
 
     send(self(), :accept_clients)
 
@@ -29,10 +32,12 @@ defmodule ProtoHackers.ElixirPriceServer do
 
   @impl true
   def handle_info(:accept_clients, %{socket: socket} = state) do
+    Logger.debug("Accepting clients: #{inspect(socket, pretty: true)}")
     send(self(), :accept_clients)
 
     case :gen_tcp.accept(socket) do
       {:ok, client_socket} ->
+        Logger.debug("Accepted client: #{inspect(client_socket, pretty: true)}")
         Session.Supervisor.start_child(client_socket)
 
       {:error, :timeout} ->

@@ -5,9 +5,9 @@ defmodule PriceServerTest do
 
   @ports [4205]
 
-  test "handles the test case from the docs" do
-    @ports
-    |> Enum.map(fn port ->
+  test "handles several of the test case from the docs" do
+    for port <- @ports,
+        _ <- 1..10 do
       Task.async(fn ->
         parameters = [{12345, 101}, {12346, 102}, {12347, 100}, {40960, 5}]
 
@@ -26,9 +26,11 @@ defmodule PriceServerTest do
 
         {:ok, <<mean_price::big-integer-size(32)>>} = :gen_tcp.recv(socket, 0)
 
+        :gen_tcp.shutdown(socket, :write)
+
         assert mean_price == 101
       end)
-    end)
+    end
     |> Enum.each(&Task.await/1)
   end
 end
