@@ -51,7 +51,7 @@ init { socket } = do
 
 handleInfo :: InfoFn Unit Unit Message State
 handleInfo ReadRequest state = do
-  maybeData <- liftEffect $ Tcp.recv state.socket 9 (420.0 # wrap # Timeout)
+  maybeData <- liftEffect $ Tcp.recv state.socket 9 InfiniteTimeout
   when (state.requestCount `mod` 5000 == 0) do
     { count: state.requestCount } # Logger.info { domain: List.nil, type: LogType.Trace } # liftEffect
   case maybeData of
