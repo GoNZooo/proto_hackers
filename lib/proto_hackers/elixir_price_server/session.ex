@@ -19,12 +19,16 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
       defstruct @enforce_keys
     end
 
-    def parse(<<"I"::binary, timestamp::big-integer-size(32), price::big-integer-size(32)>>) do
+    def parse(
+          <<"I"::binary, timestamp::big-signed-integer-size(32),
+            price::big-signed-integer-size(32)>>
+        ) do
       {:ok, %Insert{timestamp: timestamp, price: price}}
     end
 
     def parse(
-          <<"Q"::binary, minimum_time::big-integer-size(32), maximum_time::big-integer-size(32)>>
+          <<"Q"::binary, minimum_time::big-signed-integer-size(32),
+            maximum_time::big-signed-integer-size(32)>>
         ) do
       {:ok, %Query{minimum_time: minimum_time, maximum_time: maximum_time}}
     end
@@ -34,11 +38,11 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
     end
 
     def encode(%Insert{timestamp: timestamp, price: price}) do
-      <<"I", timestamp::big-integer-size(32), price::big-integer-size(32)>>
+      <<"I", timestamp::big-signed-integer-size(32), price::big-integer-size(32)>>
     end
 
     def encode(%Query{minimum_time: minimum_time, maximum_time: maximum_time}) do
-      <<"Q", minimum_time::big-integer-size(32), maximum_time::big-integer-size(32)>>
+      <<"Q", minimum_time::big-signed-integer-size(32), maximum_time::big-integer-size(32)>>
     end
   end
 
