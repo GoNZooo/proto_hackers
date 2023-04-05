@@ -43,7 +43,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   end
 
   def start_link(socket) do
-    GenServer.start_link(__MODULE__, socket, name: {:global, {__MODULE__, socket}})
+    GenServer.start_link(__MODULE__, socket)
   end
 
   @impl true

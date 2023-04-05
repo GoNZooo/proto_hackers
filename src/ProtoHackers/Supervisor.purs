@@ -28,7 +28,7 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
     , SupervisorHelpers.worker "ProtoHackers.ElixirPrimeServer" elixirPrimeServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.PrimeServer" (PrimeServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirPriceServer" elixirPriceServerStartLink
-    , SupervisorHelpers.worker
+    , SupervisorHelpers.supervisor
         "ProtoHackers.ElixirPriceServer.Session.Supervisor"
         elixirPriceSessionSupervisorStartLink
     ]
