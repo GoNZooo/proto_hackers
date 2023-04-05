@@ -13,6 +13,7 @@ import Erl.Atom as Atom
 import Erl.Data.List as List
 import Erl.Kernel.Tcp as AcceptError
 import Erl.Kernel.Tcp as Tcp
+import Erl.Process as Process
 import Erl.Types (Timeout(..))
 import Foreign as Foreign
 import Logger as LogType
@@ -20,7 +21,6 @@ import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
 import Pinto.GenServer (InfoFn, InitFn, InitResult(..), ServerSpec)
 import Pinto.GenServer as GenServer
-import Pinto.Timer as Timer
 import ProtoHackers.PriceServer.Session.Supervisor as SessionSupervisor
 import ProtoHackers.PriceServer.Types (Arguments, Message(..), Pid, ServerType', State)
 
@@ -37,6 +37,7 @@ spec arguments =
 
 init :: Arguments -> InitFn Unit Unit Message State
 init {} = do
+  self' <- Process.self
   { message: "ProtoHackers.PriceServer listening on port 4204" }
     # Logger.info { domain: List.nil, type: LogType.Trace }
     # liftEffect
@@ -46,14 +47,15 @@ init {} = do
       # liftEffect
   case maybeSocket of
     Right socket -> do
-      _timerId <- Timer.sendAfter (wrap 0.0) AcceptClients
+      _timerId <- liftEffect $ Process.send self' AcceptClients
       { socket } # InitOk # pure
     Left error -> do
       error # Foreign.unsafeToForeign # InitStop # pure
 
 handleInfo :: InfoFn Unit Unit Message State
 handleInfo AcceptClients state = do
-  _timerId <- Timer.sendAfter (wrap 0.0) AcceptClients
+  self' <- Process.self
+  _timerId <- liftEffect $ Process.send self' AcceptClients
 
   maybeSocket <- liftEffect $ Tcp.acceptPassive state.socket InfiniteTimeout
   case maybeSocket of

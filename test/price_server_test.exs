@@ -1,9 +1,11 @@
 defmodule PriceServerTest do
   use ExUnit.Case
 
+  require Logger
+
   alias ProtoHackers.ElixirPriceServer.Session.Request
 
-  @ports [4205, 4204]
+  @ports [4204, 4205]
 
   test "handles several of the test case from the docs" do
     for port <- @ports,
@@ -49,6 +51,8 @@ defmodule PriceServerTest do
     @ports
     |> Enum.map(fn port ->
       Task.async(fn ->
+        internal_start_time = System.monotonic_time(:millisecond)
+
         {:ok, socket} = :gen_tcp.connect({127, 0, 0, 1}, port, mode: :binary, active: false)
 
         Enum.each(inserts, fn d -> :gen_tcp.send(socket, d) end)
@@ -61,6 +65,10 @@ defmodule PriceServerTest do
         {:ok, <<mean_price::big-integer-size(32)>>} = :gen_tcp.recv(socket, 0)
         assert mean_price == price
         :gen_tcp.shutdown(socket, :write)
+
+        internal_end_time = System.monotonic_time(:millisecond)
+        diff = internal_end_time - internal_start_time
+        Logger.debug("Took #{diff} ms to insert 200 000 prices for port #{port}")
       end)
     end)
     |> Enum.each(fn t -> Task.await(t, 15_000) end)
