@@ -21,7 +21,11 @@ import Pinto.GenServer (ServerPid, ServerType)
 
 data Message = ReadRequest
 
-type State = { socket :: TcpSocket PassiveSocket ConnectedSocket, prices :: Set PriceData }
+type State =
+  { socket :: TcpSocket PassiveSocket ConnectedSocket
+  , prices :: Set PriceData
+  , requestCount :: Int
+  }
 
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }
 
