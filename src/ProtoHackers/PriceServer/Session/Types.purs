@@ -17,6 +17,7 @@ import Data.Newtype (class Newtype)
 import Data.Show.Generic (genericShow)
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
+import Erl.Process (Process)
 import Pinto.GenServer (ServerPid, ServerType)
 
 data Message = ReadRequest
@@ -29,7 +30,7 @@ type State =
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }
 
 type ServerType' = ServerType Message Unit Message State
-type Pid = ServerPid Message Unit Message State
+type Pid = Process Message
 
 data Request
   = Insert PriceData

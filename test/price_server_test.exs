@@ -5,7 +5,7 @@ defmodule PriceServerTest do
 
   alias ProtoHackers.ElixirPriceServer.Session.Request
 
-  @ports [4205, 4204]
+  @ports [4204, 4205]
 
   test "handles several of the test case from the docs" do
     for port <- @ports,
