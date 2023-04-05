@@ -4,7 +4,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   require Logger
 
   defmodule State do
-    @enforce_keys [:socket, :prices, :request_count]
+    @enforce_keys [:socket, :prices]
     defstruct @enforce_keys
   end
 
@@ -54,27 +54,53 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   def init(socket) do
     send(self(), :await_request)
 
-    {:ok, %State{socket: socket, prices: MapSet.new(), request_count: 0}}
+    {:ok, %State{socket: socket, prices: MapSet.new()}}
+  end
+
+  @impl true
+  def handle_continue(:await_request, %State{socket: socket, prices: prices} = state) do
+    new_state =
+      case get_request(socket) do
+        {:ok, %Request.Insert{} = insert} ->
+          new_prices = handle_insert(insert, prices)
+          %State{state | prices: new_prices}
+
+        {:ok, %Request.Query{} = query} ->
+          handle_query(socket, query, prices)
+          state
+
+        {:error, :invalid_request} ->
+          state
+
+        {:error, :closed} ->
+          send(self(), :close)
+          state
+
+        {:error, :timeout} ->
+          state
+
+        {:error, reason} ->
+          Logger.error("Error when awaiting request: #{inspect(reason)}")
+
+          state
+      end
+
+    {:noreply, new_state, {:continue, :await_request}}
   end
 
   @impl true
   def handle_info(:await_request, %State{socket: socket, prices: prices} = state) do
-    if rem(state.request_count, 5000) == 0 do
-      # Logger.debug("#{state.request_count}")
-      :ok
-    end
-
     new_state =
       case get_request(socket) do
         {:ok, %Request.Insert{} = insert} ->
           new_prices = handle_insert(insert, prices)
           send(self(), :await_request)
-          %State{state | prices: new_prices, request_count: state.request_count + 1}
+          %State{state | prices: new_prices}
 
         {:ok, %Request.Query{} = query} ->
           handle_query(socket, query, prices)
           send(self(), :await_request)
-          %State{state | request_count: state.request_count + 1}
+          state
 
         {:error, :invalid_request} ->
           send(self(), :await_request)
@@ -119,7 +145,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   end
 
   defp handle_insert(%Request.Insert{timestamp: timestamp, price: price}, prices) do
-    MapSet.put(prices, {timestamp, price})
+    MapSet.put(prices, %{timestamp: timestamp, price: price})
   end
 
   defp handle_query(
@@ -130,7 +156,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
     mean_price =
       prices
       |> MapSet.to_list()
-      |> Enum.filter(fn {timestamp, _price} ->
+      |> Enum.filter(fn %{timestamp: timestamp} ->
         timestamp >= minimum_time and timestamp <= maximum_time
       end)
       |> case do
@@ -139,7 +165,7 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
 
         prices_in_range ->
           prices_in_range
-          |> Enum.map(fn {_timestamp, price} -> price end)
+          |> Enum.map(fn %{price: price} -> price end)
           |> Enum.sum()
           |> Kernel./(length(prices_in_range))
           |> round()
