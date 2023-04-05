@@ -27,6 +27,10 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
     , SupervisorHelpers.worker "ProtoHackers.EchoServer" (EchoServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirPrimeServer" elixirPrimeServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.PrimeServer" (PrimeServer.startLink {})
+    , SupervisorHelpers.worker "ProtoHackers.ElixirPriceServer" elixirPriceServerStartLink
+    , SupervisorHelpers.worker
+        "ProtoHackers.ElixirPriceServer.Session.Supervisor"
+        elixirPriceSessionSupervisorStartLink
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne
@@ -35,3 +39,5 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
 
 foreign import elixirEchoServerStartLink :: Effect (StartLinkResult Pid)
 foreign import elixirPrimeServerStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirPriceServerStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirPriceSessionSupervisorStartLink :: Effect (StartLinkResult Pid)
