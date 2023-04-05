@@ -63,13 +63,11 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
       case get_request(socket) do
         {:ok, %Request.Insert{} = insert} ->
           new_prices = handle_insert(insert, prices)
-          Logger.debug("Handling insert: #{inspect(insert, pretty: true)}")
           send(self(), :await_request)
           %State{state | prices: new_prices}
 
         {:ok, %Request.Query{} = query} ->
           handle_query(socket, query, prices)
-          Logger.debug("Handling query: #{inspect(query, pretty: true)}")
           send(self(), :await_request)
           state
 

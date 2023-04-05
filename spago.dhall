@@ -31,6 +31,7 @@ to generate this file without the comments in this block.
   , "integers"
   , "maybe"
   , "newtype"
+  , "ordered-collections"
   , "prelude"
   , "purerl-test"
   , "quickcheck"
