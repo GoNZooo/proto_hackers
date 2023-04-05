@@ -110,6 +110,10 @@ let purerl-test =
       https://raw.githubusercontent.com/GoNZooo/purerl-test/v0.1.8/spago.dhall
         sha256:dc58efbdc04ed56d57eb405ee1ec5b592d3415ffeec0d416e65f8c220d8566b2
 
+let erl-sets =
+      https://raw.githubusercontent.com/GoNZooo/purescript-erl-sets/main/spago.dhall
+        sha256:20870b3e41a2080d6e2330ce57a838afd3201b2a5fdf307b297abbfd6db48fc3
+
 let overrides =
       { erl-quickcheck-helpers =
         { repo =
@@ -131,6 +135,11 @@ let overrides =
         { dependencies = upstream.erl-kernel.dependencies
         , repo = "https://github.com/GoNZooo/purescript-erl-kernel.git"
         , version = "SocketPacket-export"
+        }
+      , erl-sets =
+        { dependencies = erl-sets.dependencies
+        , repo = "https://github.com/GoNZooo/purescript-erl-sets.git"
+        , version = "main"
         }
       }
 

@@ -60,7 +60,8 @@ defmodule ProtoHackers.ElixirPriceServer.Session do
   @impl true
   def handle_info(:await_request, %State{socket: socket, prices: prices} = state) do
     if rem(state.request_count, 5000) == 0 do
-      Logger.debug("#{state.request_count}")
+      # Logger.debug("#{state.request_count}")
+      :ok
     end
 
     new_state =
