@@ -13,8 +13,8 @@ import Prelude
 
 import Data.Generic.Rep (class Generic)
 import Data.Newtype (class Newtype)
-import Data.Set (Set)
 import Data.Show.Generic (genericShow)
+import Erl.Data.Set (Set)
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
 import Pinto.GenServer (ServerPid, ServerType)
@@ -48,3 +48,4 @@ newtype InvalidRequest = InvalidRequest String
 
 derive instance Eq InvalidRequest
 derive instance Newtype InvalidRequest _
+
