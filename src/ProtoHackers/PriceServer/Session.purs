@@ -12,7 +12,6 @@ import Data.Newtype (wrap)
 import Data.Set as Set
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Class.Console as Console
 import Erl.Data.Binary.IOData (IOData)
 import Erl.Data.List as List
 import Erl.Kernel.Inet as ActiveError
@@ -48,23 +47,26 @@ spec arguments = do
 init :: Arguments -> InitFn Unit Unit Message State
 init { socket } = do
   _timerId <- Timer.sendAfter (wrap 0.0) ReadRequest
-  { socket, prices: Set.empty } # InitOk # pure
+  { socket, prices: Set.empty, requestCount: 0 } # InitOk # pure
 
 handleInfo :: InfoFn Unit Unit Message State
 handleInfo ReadRequest state = do
   maybeData <- liftEffect $ Tcp.recv state.socket 9 (420.0 # wrap # Timeout)
+  when (state.requestCount `mod` 5000 == 0) do
+    { count: state.requestCount } # Logger.info { domain: List.nil, type: LogType.Trace } # liftEffect
   case maybeData of
     Right data' -> do
       case data' # UnsafeCoerce.unsafeCoerce # parseRequest of
         Right (Request.Insert insertData) -> do
           _timerId <- Timer.sendAfter (wrap 0.0) ReadRequest
           newState <- state # handleInsert insertData # liftEffect
-          newState # GenServer.return # pure
+          newState { requestCount = newState.requestCount + 1 } # GenServer.return # pure
         Right (Request.Query queryData) -> do
           _timerId <- Timer.sendAfter (wrap 0.0) ReadRequest
           state # handleQuery queryData # liftEffect
-          state # GenServer.return # pure
+          state { requestCount = state.requestCount + 1 } # GenServer.return # pure
         Left error -> do
+          _timerId <- Timer.sendAfter (wrap 0.0) ReadRequest
           let message = "Error parsing request"
           { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
           state # GenServer.return # pure
