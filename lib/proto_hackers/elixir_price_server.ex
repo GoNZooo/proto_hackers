@@ -22,6 +22,8 @@ defmodule ProtoHackers.ElixirPriceServer do
         buffer: 1024
       )
 
+    Logger.debug("#{__MODULE__} listening on port #{@port}: #{inspect(socket, pretty: true)}")
+
     send(self(), :accept_clients)
 
     {:ok, %{socket: socket}}
