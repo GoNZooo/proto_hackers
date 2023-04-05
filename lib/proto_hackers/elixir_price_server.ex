@@ -32,12 +32,10 @@ defmodule ProtoHackers.ElixirPriceServer do
 
   @impl true
   def handle_info(:accept_clients, %{socket: socket} = state) do
-    Logger.debug("Accepting clients: #{inspect(socket, pretty: true)}")
     send(self(), :accept_clients)
 
     case :gen_tcp.accept(socket) do
       {:ok, client_socket} ->
-        Logger.debug("Accepted client: #{inspect(client_socket, pretty: true)}")
         Session.Supervisor.start_child(client_socket)
 
       {:error, :timeout} ->
