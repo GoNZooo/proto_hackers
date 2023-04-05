@@ -55,7 +55,7 @@ handleInfo :: InfoFn Unit Unit Message State
 handleInfo AcceptClients state = do
   _timerId <- Timer.sendAfter (wrap 0.0) AcceptClients
 
-  maybeSocket <- 420.0 # wrap # Timeout # Tcp.acceptPassive state.socket # liftEffect
+  maybeSocket <- liftEffect $ Tcp.acceptPassive state.socket InfiniteTimeout
   case maybeSocket of
     Right clientSocket -> do
       { socket: clientSocket } # SessionSupervisor.startChild # void # liftEffect
