@@ -1,7 +1,9 @@
 module SimpleServer
   ( startLink
+  , startLinkBare
   , InitValue
   , ReturnValue
+  , StopReason(..)
   , cast
   , call
   , ServerPid(..)
@@ -37,7 +39,12 @@ data InitValue state
 data ReturnValue state
   = SimpleNoReply state
   | SimpleReply Foreign state
-  | SimpleStop state
+  | SimpleStop StopReason state
+
+data StopReason
+  = StopNormal
+  | StopShutdown
+  | StopOther Foreign
 
 noReply :: forall state. state -> ReturnValue state
 noReply state = SimpleNoReply state
@@ -45,14 +52,23 @@ noReply state = SimpleNoReply state
 reply :: forall state a. a -> state -> ReturnValue state
 reply value state = SimpleReply (Foreign.unsafeToForeign value) state
 
-stop :: forall state. state -> ReturnValue state
-stop state = SimpleStop state
+stop :: forall state. StopReason -> state -> ReturnValue state
+stop reason state = SimpleStop reason state
 
 initOk :: forall state. state -> InitValue state
 initOk state = SimpleInitOk state
 
 initError :: forall state a. a -> InitValue state
 initError value = SimpleInitError (Foreign.unsafeToForeign value)
+
+startLinkBare
+  :: forall arguments message state
+   . Show arguments
+  => arguments
+  -> StartLinkArguments arguments message state
+  -> Effect (StartLinkResult (Process message))
+startLinkBare startArguments arguments = do
+  startLinkBare_ startArguments arguments
 
 startLink
   :: forall arguments message state
@@ -61,6 +77,12 @@ startLink
   -> Effect (StartLinkResult (Process message))
 startLink startArguments arguments = do
   startLink_ startArguments arguments
+
+foreign import startLinkBare_
+  :: forall arguments message state
+   . arguments
+  -> StartLinkArguments arguments message state
+  -> Effect (StartLinkResult (Process message))
 
 foreign import startLink_
   :: forall arguments message state

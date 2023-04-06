@@ -31,13 +31,13 @@ import ProtoHackers.PriceServer.Session.Types
   , State
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer (InitValue, ReturnValue)
+import SimpleServer (InitValue, ReturnValue, StopReason(..))
 import SimpleServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult (Process Message))
 startLink arguments = do
-  SimpleServer.startLink arguments { init, handleInfo, name: Nothing }
+  SimpleServer.startLinkBare arguments { init, handleInfo, name: Nothing }
 
 init :: Arguments -> ProcessM Message (InitValue State)
 init { socket } = do
@@ -68,7 +68,7 @@ handleInfo ReadRequest state = do
     Left ActiveError.ActiveTimeout -> do
       state # SimpleServer.noReply # pure
     Left ActiveError.ActiveClosed -> do
-      state # SimpleServer.stop # pure
+      state # SimpleServer.stop StopNormal # pure
     Left error -> do
       let message = "Error reading from client socket"
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
