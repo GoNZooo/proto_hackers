@@ -42,28 +42,28 @@ init({StartArguments, Init, HandleInfo}) ->
       {stop, Foreign}
   end.
 
-handle_info(Message, #{state := State, handleInfo := HandleInfo}) ->
+handle_info(Message, #{state := State, handleInfo := HandleInfo} = S) ->
   case ((HandleInfo(Message))(State))() of
     {simpleNoReply, NewState} ->
-      {noreply, #{state => NewState, handleInfo => HandleInfo}};
+      {noreply, S#{state => NewState}};
     {simpleStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), #{state => NewState, handleInfo => HandleInfo}}
+      {stop, translate_stop_reason(Reason), S#{state => NewState}}
   end.
 
-handle_cast({cast, F}, State) ->
+handle_cast({cast, F}, #{state := State} = S) ->
   case (F(State))() of
     {simpleNoReply, NewState} ->
-      {noreply, NewState};
+      {noreply, S#{state => NewState}};
     {simpleStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), NewState}
+      {stop, translate_stop_reason(Reason), S#{state => NewState}}
   end.
 
-handle_call(From, {call, F}, State) ->
+handle_call(From, {call, F}, #{state := State} = S) ->
   case ((F(From))(State))() of
     {simpleReply, Reply, NewState} ->
-      {reply, Reply, NewState};
+      {reply, Reply, S#{state => NewState}};
     {simpleStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), NewState}
+      {stop, translate_stop_reason(Reason), S#{state => NewState}}
   end.
 
 translate_stop_reason({stopNormal}) ->
