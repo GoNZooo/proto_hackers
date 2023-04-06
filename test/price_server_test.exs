@@ -37,7 +37,7 @@ defmodule PriceServerTest do
 
   test "handles several of the test case from the docs" do
     for port <- @ports,
-        _ <- 1..10 do
+        _ <- 1..10_000 do
       Task.async(fn ->
         parameters = [{12345, 101}, {12346, 102}, {12347, 100}, {40960, 5}]
 
@@ -64,12 +64,12 @@ defmodule PriceServerTest do
     |> Enum.each(&Task.await/1)
   end
 
-  @tag timeout: 20_000
-  test "handles 500 000 inserts in less than 15 seconds" do
+  @tag timeout: 10_000
+  test "handles 1 000 000 inserts in less than 15 seconds" do
     price = 100
 
     inserts =
-      1..500_000
+      1..1_000_000
       |> Enum.map(fn timestamp ->
         %Request.Insert{timestamp: timestamp, price: price} |> Request.encode()
       end)
@@ -96,13 +96,14 @@ defmodule PriceServerTest do
 
         internal_end_time = System.monotonic_time(:millisecond)
         diff = internal_end_time - internal_start_time
-        Logger.debug("Took #{diff} ms to insert 500 000 prices for port #{port}")
+        Logger.debug("Took #{diff} ms to insert 1 000 000 prices for port #{port}")
+        assert diff < 5_000
       end)
     end)
-    |> Enum.each(fn t -> Task.await(t, 15_000) end)
+    |> Enum.each(fn t -> Task.await(t, 10_000) end)
 
     end_time = System.monotonic_time(:millisecond)
 
-    assert end_time - start_time < 15_000
+    assert end_time - start_time < 5_000
   end
 end

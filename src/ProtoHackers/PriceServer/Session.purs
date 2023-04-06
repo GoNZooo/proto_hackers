@@ -6,14 +6,14 @@ module ProtoHackers.PriceServer.Session
 import Prelude
 
 import Data.Either (Either(..))
-import Data.MapSet (MapSet)
-import Data.MapSet as MapSet
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Erl.Data.Binary.IOData (IOData)
 import Erl.Data.List (List)
 import Erl.Data.List as List
+import Erl.Data.Set (Set)
+import Erl.Data.Set as Set
 import Erl.Kernel.Inet as ActiveError
 import Erl.Kernel.Tcp as Tcp
 import Erl.Process (Process, ProcessM)
@@ -31,7 +31,7 @@ import ProtoHackers.PriceServer.Session.Types
   , State
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer as SimpleServer
+import SimpleGenServer as SimpleServer
 import SimpleServer.Types (InitValue, ReturnValue, StopReason(..))
 import Unsafe.Coerce as UnsafeCoerce
 
@@ -43,9 +43,7 @@ init :: Arguments -> ProcessM Message (InitValue State)
 init { socket } = do
   self' <- Process.self
   liftEffect $ Process.send self' ReadRequest
-  pure $ SimpleServer.initOk { socket, prices: MapSet.empty }
-
-foreign import sendSelf :: Message -> ProcessM Message Unit
+  pure $ SimpleServer.initOk { socket, prices: Set.empty }
 
 handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
 handleInfo ReadRequest state = do
@@ -75,16 +73,16 @@ handleInfo ReadRequest state = do
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       state # SimpleServer.noReply # pure
 
-handleInsert :: PriceData -> MapSet PriceData -> MapSet PriceData
+handleInsert :: PriceData -> Set PriceData -> Set PriceData
 handleInsert { timestamp, price } prices = do
-  MapSet.insert { timestamp, price } prices
+  Set.insert { timestamp, price } prices
 
 handleQuery :: { minimumTimestamp :: Int, maximumTimestamp :: Int } -> State -> Effect Unit
 handleQuery { minimumTimestamp, maximumTimestamp } { socket, prices } = do
   let
     pricesInRange =
       prices
-        # MapSet.toList
+        # Set.toList
         # List.filter
             (\{ timestamp } -> minimumTimestamp <= timestamp && timestamp <= maximumTimestamp)
     meanPrice =
@@ -96,6 +94,7 @@ handleQuery { minimumTimestamp, maximumTimestamp } { socket, prices } = do
         # (_ / List.length pricesInRange)
   meanPrice # meanPriceResponse # Tcp.send socket # void
 
+foreign import sendSelf :: Message -> ProcessM Message Unit
 foreign import parseRequest :: String -> Either InvalidRequest Request
 foreign import meanPriceResponse :: Int -> IOData
 foreign import mapList :: forall a b. (a -> b) -> List a -> List b

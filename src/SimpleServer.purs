@@ -14,8 +14,7 @@ import SimpleServer.Types (ServerPid, StartLinkArguments, noReply, reply, stop, 
 
 startLink
   :: forall arguments message state
-   . Show arguments
-  => arguments
+   . arguments
   -> StartLinkArguments arguments message state
   -> Effect (StartLinkResult (Process message))
 startLink startArguments arguments = do

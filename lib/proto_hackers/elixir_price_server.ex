@@ -20,7 +20,7 @@ defmodule ProtoHackers.ElixirPriceServer do
         reuseaddr: true,
         exit_on_close: false,
         buffer: 1024,
-        backlog: 100
+        backlog: 10_000
       )
 
     Logger.debug("#{__MODULE__} listening on port #{@port}: #{inspect(socket, pretty: true)}")
