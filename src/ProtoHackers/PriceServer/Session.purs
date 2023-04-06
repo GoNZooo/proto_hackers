@@ -31,7 +31,7 @@ import ProtoHackers.PriceServer.Session.Types
   , State
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleGenServer as SimpleServer
+import SimpleServer as SimpleServer
 import SimpleServer.Types (InitValue, ReturnValue, StopReason(..))
 import Unsafe.Coerce as UnsafeCoerce
 
@@ -45,23 +45,24 @@ init { socket } = do
   liftEffect $ Process.send self' ReadRequest
   pure $ SimpleServer.initOk { socket, prices: MapSet.empty }
 
+foreign import sendSelf :: Message -> ProcessM Message Unit
+
 handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
 handleInfo ReadRequest state = do
-  self' <- Process.self
   maybeData <- liftEffect $ Tcp.recv state.socket 9 InfiniteTimeout
   case maybeData of
     Right data' -> do
       case parseRequest (UnsafeCoerce.unsafeCoerce data') of
         Right (Request.Insert insertData) -> do
-          liftEffect $ Process.send self' ReadRequest
+          sendSelf ReadRequest
           let newPrices = handleInsert insertData state.prices
           state { prices = newPrices } # SimpleServer.noReply # pure
         Right (Request.Query queryData) -> do
-          liftEffect $ Process.send self' ReadRequest
+          sendSelf ReadRequest
           state # handleQuery queryData # liftEffect
           state # SimpleServer.noReply # pure
         Left error -> do
-          liftEffect $ Process.send self' ReadRequest
+          sendSelf ReadRequest
           let message = "Error parsing request"
           { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
           state # SimpleServer.noReply # pure
