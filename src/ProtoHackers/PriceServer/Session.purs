@@ -8,6 +8,7 @@ import Prelude
 import Data.Either (Either(..))
 import Data.MapSet (MapSet)
 import Data.MapSet as MapSet
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Erl.Data.Binary.IOData (IOData)
@@ -30,19 +31,19 @@ import ProtoHackers.PriceServer.Session.Types
   , State
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer (InitValue(..), ReturnValue(..))
+import SimpleServer (InitValue, ReturnValue)
 import SimpleServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult (Process Message))
 startLink arguments = do
-  SimpleServer.startLink arguments { init, handleInfo }
+  SimpleServer.startLink arguments { init, handleInfo, name: Nothing }
 
 init :: Arguments -> ProcessM Message (InitValue State)
 init { socket } = do
   self' <- Process.self
   liftEffect $ Process.send self' ReadRequest
-  pure $ SimpleInitOk { socket, prices: MapSet.empty }
+  pure $ SimpleServer.initOk { socket, prices: MapSet.empty }
 
 handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
 handleInfo ReadRequest state = do
@@ -54,24 +55,24 @@ handleInfo ReadRequest state = do
         Right (Request.Insert insertData) -> do
           liftEffect $ Process.send self' ReadRequest
           let newPrices = handleInsert insertData state.prices
-          state { prices = newPrices } # SimpleNoReply # pure
+          state { prices = newPrices } # SimpleServer.noReply # pure
         Right (Request.Query queryData) -> do
           liftEffect $ Process.send self' ReadRequest
           state # handleQuery queryData # liftEffect
-          state # SimpleNoReply # pure
+          state # SimpleServer.noReply # pure
         Left error -> do
           liftEffect $ Process.send self' ReadRequest
           let message = "Error parsing request"
           { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
-          state # SimpleNoReply # pure
+          state # SimpleServer.noReply # pure
     Left ActiveError.ActiveTimeout -> do
-      state # SimpleNoReply # pure
+      state # SimpleServer.noReply # pure
     Left ActiveError.ActiveClosed -> do
-      state # SimpleStop # pure
+      state # SimpleServer.stop # pure
     Left error -> do
       let message = "Error reading from client socket"
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
-      state # SimpleNoReply # pure
+      state # SimpleServer.noReply # pure
 
 handleInsert :: PriceData -> MapSet PriceData -> MapSet PriceData
 handleInsert { timestamp, price } prices = do
