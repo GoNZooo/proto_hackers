@@ -37,7 +37,7 @@ import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult (Process Message))
 startLink arguments = do
-  SimpleServer.startLinkBare arguments { init, handleInfo, name: Nothing }
+  SimpleServer.startLink arguments { init, handleInfo, name: Nothing }
 
 init :: Arguments -> ProcessM Message (InitValue State)
 init { socket } = do

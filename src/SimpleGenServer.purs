@@ -1,4 +1,4 @@
-module SimpleServer
+module SimpleGenServer
   ( startLink
   , InitValue
   , ReturnValue
@@ -62,8 +62,7 @@ initError value = SimpleInitError (Foreign.unsafeToForeign value)
 
 startLink
   :: forall arguments message state
-   . Show arguments
-  => arguments
+   . arguments
   -> StartLinkArguments arguments message state
   -> Effect (StartLinkResult (Process message))
 startLink startArguments arguments = do
