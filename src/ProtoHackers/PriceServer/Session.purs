@@ -9,16 +9,20 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
+import Erl.Data.Binary (Binary)
 import Erl.Data.Binary.IOData (IOData)
 import Erl.Data.List (List)
 import Erl.Data.List as List
 import Erl.Data.Set (Set)
 import Erl.Data.Set as Set
+import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Inet as ActiveError
+import Erl.Kernel.Tcp (TcpSocket)
 import Erl.Kernel.Tcp as Tcp
 import Erl.Process (Process, ProcessM)
 import Erl.Process as Process
 import Erl.Types (Timeout(..))
+import Foreign (Foreign)
 import Logger as LogType
 import Logger as Logger
 import Pinto (StartLinkResult)
@@ -47,7 +51,7 @@ init { socket } = do
 
 handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
 handleInfo ReadRequest state = do
-  maybeData <- liftEffect $ Tcp.recv state.socket 9 InfiniteTimeout
+  maybeData <- liftEffect $ recv state.socket 9
   case maybeData of
     Right data' -> do
       case parseRequest (UnsafeCoerce.unsafeCoerce data') of
@@ -64,11 +68,11 @@ handleInfo ReadRequest state = do
           let message = "Error parsing request"
           { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
           state # SimpleServer.noReply # pure
-    Left ActiveError.ActiveTimeout -> do
+    Left RecvErrorTimeout -> do
       state # SimpleServer.noReply # pure
-    Left ActiveError.ActiveClosed -> do
+    Left RecvErrorClosed -> do
       state # SimpleServer.stop StopNormal # pure
-    Left error -> do
+    Left (RecvErrorOther error) -> do
       let message = "Error reading from client socket"
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       state # SimpleServer.noReply # pure
@@ -94,8 +98,15 @@ handleQuery { minimumTimestamp, maximumTimestamp } { socket, prices } = do
         # (_ / List.length pricesInRange)
   meanPrice # meanPriceResponse # Tcp.send socket # void
 
+data RecvError
+  = RecvErrorClosed
+  | RecvErrorTimeout
+  | RecvErrorOther Foreign
+
 foreign import sendSelf :: Message -> ProcessM Message Unit
 foreign import parseRequest :: String -> Either InvalidRequest Request
 foreign import meanPriceResponse :: Int -> IOData
 foreign import mapList :: forall a b. (a -> b) -> List a -> List b
 foreign import sumList :: forall a. List a -> a
+foreign import recv
+  :: TcpSocket PassiveSocket ConnectedSocket -> Int -> Effect (Either RecvError Binary)
