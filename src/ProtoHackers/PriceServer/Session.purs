@@ -31,8 +31,8 @@ import ProtoHackers.PriceServer.Session.Types
   , State
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer (InitValue, ReturnValue, StopReason(..))
-import SimpleServer as SimpleServer
+import SimpleGenServer as SimpleServer
+import SimpleServer.Types (InitValue, ReturnValue, StopReason(..))
 import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult (Process Message))

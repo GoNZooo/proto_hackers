@@ -65,11 +65,11 @@ defmodule PriceServerTest do
   end
 
   @tag timeout: 20_000
-  test "handles 200 000 inserts in less than 15 seconds" do
+  test "handles 500 000 inserts in less than 15 seconds" do
     price = 100
 
     inserts =
-      1..200_000
+      1..500_000
       |> Enum.map(fn timestamp ->
         %Request.Insert{timestamp: timestamp, price: price} |> Request.encode()
       end)
@@ -96,7 +96,7 @@ defmodule PriceServerTest do
 
         internal_end_time = System.monotonic_time(:millisecond)
         diff = internal_end_time - internal_start_time
-        Logger.debug("Took #{diff} ms to insert 200 000 prices for port #{port}")
+        Logger.debug("Took #{diff} ms to insert 500 000 prices for port #{port}")
       end)
     end)
     |> Enum.each(fn t -> Task.await(t, 15_000) end)
