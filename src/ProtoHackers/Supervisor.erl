@@ -1,7 +1,9 @@
 -module(protoHackers_supervisor@foreign).
 
 -export([elixirEchoServerStartLink/0, elixirPrimeServerStartLink/0,
-         elixirPriceServerStartLink/0, elixirPriceSessionSupervisorStartLink/0]).
+         elixirPriceServerStartLink/0, elixirPriceSessionSupervisorStartLink/0,
+         elixirChatServerStartLink/0, elixirChatServerSessionSupervisorStartLink/0,
+         elixirChatServerPresenceStartLink/0, pgStartLink/0]).
 
 elixirEchoServerStartLink() ->
   fun() ->
@@ -30,6 +32,38 @@ elixirPriceServerStartLink() ->
 elixirPriceSessionSupervisorStartLink() ->
   fun() ->
      case 'Elixir.ProtoHackers.ElixirPriceServer.Session.Supervisor':start_link([]) of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+elixirChatServerStartLink() ->
+  fun() ->
+     case 'Elixir.ProtoHackers.ElixirChatServer':start_link() of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+elixirChatServerSessionSupervisorStartLink() ->
+  fun() ->
+     case 'Elixir.ProtoHackers.ElixirChatServer.Session.Supervisor':start_link() of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+elixirChatServerPresenceStartLink() ->
+  fun() ->
+     case 'Elixir.ProtoHackers.ElixirChatServer.Presence':start_link() of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+pgStartLink() ->
+  fun() ->
+     case pg:start_link() of
        {ok, Pid} -> {right, Pid};
        {error, Reason} -> {left, Reason}
      end
