@@ -19,7 +19,8 @@ defmodule ProtoHackers.ElixirChatServer do
         active: false,
         exit_on_close: false,
         reuseaddr: true,
-        backlog: 500
+        backlog: 500,
+        packet: :line
       )
 
     send(self(), :accept)

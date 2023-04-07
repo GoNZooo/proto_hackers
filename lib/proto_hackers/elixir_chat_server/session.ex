@@ -16,7 +16,7 @@ defmodule ProtoHackers.ElixirChatServer.Session do
 
   @impl true
   def init(socket) do
-    :gen_tcp.send(socket, "Welcome! What is your username?")
+    :gen_tcp.send(socket, "Welcome! What is your username?\n")
 
     ref = make_ref()
 
@@ -31,16 +31,16 @@ defmodule ProtoHackers.ElixirChatServer.Session do
 
     case :gen_tcp.recv(socket, 0) do
       {:ok, data} ->
-        if valid_username?(data) do
+        username = String.trim(data)
+
+        if valid_username?(username) do
           users = Presence.get_users()
-          Presence.Bus.user_joined(data, ref)
+          Presence.Bus.user_joined(username, ref)
           Presence.Bus.subscribe()
-          :gen_tcp.send(socket, "* Users: #{Enum.join(users, ", ")}")
+          :gen_tcp.send(socket, "* Users: #{Enum.join(users, ", ")}\n")
 
-          {:noreply, %State{state | stage: :read_message, username: data}}
+          {:noreply, %State{state | stage: :read_message, username: username}}
         else
-          IO.puts("Received invalid username: #{inspect(data)}")
-
           :gen_tcp.close(socket)
 
           {:stop, :normal, state}
@@ -62,7 +62,11 @@ defmodule ProtoHackers.ElixirChatServer.Session do
 
     case :gen_tcp.recv(socket, 0, 25) do
       {:ok, data} ->
-        Presence.Bus.user_sent_message(state.username, state.ref, data)
+        message = String.trim(data)
+
+        if message != "" do
+          Presence.Bus.user_sent_message(state.username, state.ref, message)
+        end
 
         {:noreply, state}
 
@@ -81,14 +85,14 @@ defmodule ProtoHackers.ElixirChatServer.Session do
 
   def handle_info({:user_joined, username, ref}, %State{ref: our_ref} = state)
       when ref != our_ref do
-    :gen_tcp.send(state.socket, "* #{username} has joined")
+    :gen_tcp.send(state.socket, "* #{username} has joined\n")
 
     {:noreply, state}
   end
 
   def handle_info({:user_left, username, ref}, %State{ref: our_ref} = state)
       when ref != our_ref do
-    :gen_tcp.send(state.socket, "* #{username} has left")
+    :gen_tcp.send(state.socket, "* #{username} has left\n")
 
     {:noreply, state}
   end
@@ -98,7 +102,7 @@ defmodule ProtoHackers.ElixirChatServer.Session do
   end
 
   def handle_info({:user_sent_message, username, _ref, message}, %State{} = state) do
-    :gen_tcp.send(state.socket, "[#{username}] #{message}")
+    :gen_tcp.send(state.socket, "[#{username}] #{message}\n")
 
     {:noreply, state}
   end
