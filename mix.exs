@@ -32,7 +32,8 @@ defmodule ProtoHackers.MixProject do
       {:jsx, "~> 3.1"},
       {:gproc, "~> 0.9.0"},
       {:purerl_test, "~> 0.1.8"},
-      {:jason, "~> 1.4.0"}
+      {:jason, "~> 1.4.0"},
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
     ]
   end
 

@@ -25,7 +25,8 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
   supervisorSpec = { childSpecs, flags }
   supervisorName = "ProtoHackers.Supervisor"
   childSpecs = ErlList.fromFoldable
-    [ SupervisorHelpers.worker "ProtoHackers.TcpEchoServer" elixirEchoServerStartLink
+    [ SupervisorHelpers.worker "PgWorker" pgStartLink
+    , SupervisorHelpers.worker "ProtoHackers.TcpEchoServer" elixirEchoServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.EchoServer" (EchoServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirPrimeServer" elixirPrimeServerStartLink
     , SupervisorHelpers.worker "ProtoHackers.PrimeServer" (PrimeServer.startLink {})
@@ -37,6 +38,12 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
         "ProtoHackers.PriceServer.Session.Supervisor"
         SessionSupervisor.startLink
     , SupervisorHelpers.worker "ProtoHackers.PriceServer" (PriceServer.startLink {})
+    , SupervisorHelpers.worker "ProtoHackers.ElixirChatServer.Presence"
+        elixirChatServerPresenceStartLink
+    , SupervisorHelpers.worker "ProtoHackers.ElixirChatServer" elixirChatServerStartLink
+    , SupervisorHelpers.supervisor
+        "ProtoHackers.ChatServer.Session.Supervisor"
+        elixirChatServerSessionSupervisorStartLink
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne
@@ -47,3 +54,7 @@ foreign import elixirEchoServerStartLink :: Effect (StartLinkResult Pid)
 foreign import elixirPrimeServerStartLink :: Effect (StartLinkResult Pid)
 foreign import elixirPriceServerStartLink :: Effect (StartLinkResult Pid)
 foreign import elixirPriceSessionSupervisorStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirChatServerStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirChatServerSessionSupervisorStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirChatServerPresenceStartLink :: Effect (StartLinkResult Pid)
+foreign import pgStartLink :: Effect (StartLinkResult Pid)

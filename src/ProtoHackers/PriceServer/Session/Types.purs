@@ -12,19 +12,19 @@ module ProtoHackers.PriceServer.Session.Types
 import Prelude
 
 import Data.Generic.Rep (class Generic)
-import Data.MapSet (MapSet)
 import Data.Newtype (class Newtype)
 import Data.Show.Generic (genericShow)
+import Erl.Data.Set (Set)
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
 import Erl.Process (Process)
-import Pinto.GenServer (ServerPid, ServerType)
+import Pinto.GenServer (ServerType)
 
 data Message = ReadRequest
 
 type State =
   { socket :: TcpSocket PassiveSocket ConnectedSocket
-  , prices :: MapSet PriceData
+  , prices :: Set PriceData
   }
 
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }

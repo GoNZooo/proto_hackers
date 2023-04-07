@@ -1,4 +1,4 @@
-module SimpleServer
+module SimpleGenServer
   ( startLink
   , cast
   , call

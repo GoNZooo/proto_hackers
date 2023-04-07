@@ -42,7 +42,7 @@ init {} = do
     # Logger.info { domain: List.nil, type: LogType.Trace }
     # liftEffect
   maybeSocket <-
-    { exit_on_close: false, reuseaddr: true }
+    { exit_on_close: false, reuseaddr: true, backlog: 10_000 }
       # Tcp.listenPassive (wrap 4204)
       # liftEffect
   case maybeSocket of
