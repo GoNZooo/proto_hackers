@@ -16,12 +16,10 @@ import Erl.Data.List as List
 import Erl.Data.Set (Set)
 import Erl.Data.Set as Set
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
-import Erl.Kernel.Inet as ActiveError
 import Erl.Kernel.Tcp (TcpSocket)
 import Erl.Kernel.Tcp as Tcp
 import Erl.Process (Process, ProcessM)
 import Erl.Process as Process
-import Erl.Types (Timeout(..))
 import Foreign (Foreign)
 import Logger as LogType
 import Logger as Logger
