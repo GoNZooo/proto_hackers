@@ -51,7 +51,7 @@ defmodule ProtoHackers.ElixirChatServer.Presence do
 
   @impl true
   def handle_call(:get_users, _from, state) do
-    {:reply, Map.values(state.users), state}
+    {:reply, state.users |> Map.values() |> Enum.sort(), state}
   end
 
   @impl true

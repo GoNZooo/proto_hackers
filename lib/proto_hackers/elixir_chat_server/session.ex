@@ -34,10 +34,10 @@ defmodule ProtoHackers.ElixirChatServer.Session do
         username = String.trim(data)
 
         if valid_username?(username) do
-          users = Presence.get_users()
+          users_string = Enum.join(Presence.get_users(), ", ")
           Presence.Bus.user_joined(username, ref)
           Presence.Bus.subscribe()
-          :gen_tcp.send(socket, "* Users: #{Enum.join(users, ", ")}\n")
+          :gen_tcp.send(socket, "* Users: #{users_string}\n")
 
           {:noreply, %State{state | stage: :read_message, username: username}}
         else

@@ -5,15 +5,19 @@ defmodule ChatServerTest do
 
   alias ProtoHackers.ElixirChatServer.Presence
 
-  @ports [4207]
-
   test "user is asked for their username and socket disconnects if given invalid username" do
     port = 4207
 
-    # User 1 joins and disconnects because of a bad username
+    # User 1 joins and disconnects because of a bad username (invalid symbols)
     socket = connect(port)
     assert_welcome(socket)
     :gen_tcp.send(socket, "%!@#$%^&*()\n")
+    assert_closed(socket)
+
+    # User 1 joins and disconnects because of a bad username (empty name)
+    socket = connect(port)
+    assert_welcome(socket)
+    :gen_tcp.send(socket, " \n")
     assert_closed(socket)
 
     # User 1 joins
@@ -29,6 +33,7 @@ defmodule ChatServerTest do
     :gen_tcp.send(socket2, "validUsername2\n")
     assert_data(socket2, "* Users: validUsername1")
     assert_data(socket, "* validUsername2 has joined")
+    assert_users(["validUsername1", "validUsername2"])
 
     # User 3 joins
     socket3 = connect(port)
