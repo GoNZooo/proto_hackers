@@ -49,10 +49,8 @@ defmodule ProtoHackers.ElixirChatServer.Session do
       {:error, :timeout} ->
         {:noreply, state}
 
-      {:error, reason} ->
-        Presence.Bus.user_left(state.username, state.ref)
-
-        {:stop, reason, state}
+      {:error, _reason} ->
+        {:stop, :normal, state}
     end
   end
 

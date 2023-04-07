@@ -52,6 +52,13 @@ defmodule ChatServerTest do
     :gen_tcp.close(socket3)
     assert_data(socket2, "* validUsername3 has left")
     assert_data(socket, "* validUsername3 has left")
+
+    # User 3 joins but leaves before sending username
+    socket3 = connect(port)
+    assert_welcome(socket3)
+    :gen_tcp.close(socket3)
+    assert_timeout(socket2, 100)
+    assert_timeout(socket, 100)
   end
 
   defp connect(port) do
@@ -77,5 +84,9 @@ defmodule ChatServerTest do
 
   defp assert_users(users) do
     assert Presence.get_users() == users
+  end
+
+  defp assert_timeout(socket, timeout) do
+    {:error, :timeout} = :gen_tcp.recv(socket, 0, timeout)
   end
 end
