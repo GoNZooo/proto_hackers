@@ -8,6 +8,7 @@ module SimpleServer.Types
   , StopReason(..)
   , noReply
   , reply
+  , replyAndStop
   , stop
   , initOk
   , initError
@@ -39,7 +40,6 @@ data InitValue state
 
 data ReturnValue state
   = SimpleNoReply state
-  | SimpleReply Foreign state
   | SimpleStop StopReason state
 
 data StopReason
@@ -49,7 +49,7 @@ data StopReason
 
 data Reply a state
   = SimpleCallReply a state
-  | SimpleCallStop StopReason state
+  | SimpleCallStop a StopReason state
 
 noReply :: forall state. state -> ReturnValue state
 noReply state = SimpleNoReply state
@@ -59,6 +59,9 @@ reply state reply' = SimpleCallReply reply' state
 
 stop :: forall state. StopReason -> state -> ReturnValue state
 stop reason state = SimpleStop reason state
+
+replyAndStop :: forall state a. state -> StopReason -> a -> Reply a state
+replyAndStop state reason reply' = SimpleCallStop reply' reason state
 
 initOk :: forall state. state -> InitValue state
 initOk state = SimpleInitOk state

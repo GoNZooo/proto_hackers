@@ -42,7 +42,7 @@ foreign import startLink_
 foreign import cast
   :: forall message state
    . ServerPid message state
-  -> (state -> ProcessM message Unit)
+  -> (state -> ProcessM message (ReturnValue state))
   -> Effect Unit
 
 foreign import call

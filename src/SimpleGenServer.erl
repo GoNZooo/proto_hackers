@@ -68,8 +68,8 @@ handle_call({call, F}, From, #state{state = State} = ServerState) ->
   case ((F(From))(State))() of
     {simpleCallReply, Reply, NewState} ->
       {reply, Reply, ServerState#state{state = NewState}};
-    {simpleCallStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), ServerState#state{state = NewState}}
+    {simpleCallStop, Reply, Reason, NewState} ->
+      {stop, translate_stop_reason(Reason), Reply, ServerState#state{state = NewState}}
   end.
 
 translate_process_reference({pidReference, Pid}) ->
