@@ -36,8 +36,9 @@ startLink_(StartArguments,
 cast(Pid, F) ->
   fun() -> gen_server:cast(Pid, {cast, F}) end.
 
-call(Pid, F) ->
-  fun() -> gen_server:call(Pid, {call, F}) end.
+call(PidOrNameReference, F) ->
+  Name = translate_process_reference(PidOrNameReference),
+  fun() -> gen_server:call(Name, {call, F}) end.
 
 init({StartArguments, Init, HandleInfo}) ->
   case (Init(StartArguments))() of
@@ -63,13 +64,20 @@ handle_cast({cast, F}, #state{state = State} = ServerState) ->
       {stop, translate_stop_reason(Reason), ServerState#state{state = NewState}}
   end.
 
-handle_call(From, {call, F}, #state{state = State} = ServerState) ->
+handle_call({call, F}, From, #state{state = State} = ServerState) ->
   case ((F(From))(State))() of
-    {simpleReply, Reply, NewState} ->
+    {simpleCallReply, Reply, NewState} ->
       {reply, Reply, ServerState#state{state = NewState}};
-    {simpleStop, Reason, NewState} ->
+    {simpleCallStop, Reason, NewState} ->
       {stop, translate_stop_reason(Reason), ServerState#state{state = NewState}}
   end.
+
+translate_process_reference({pidReference, Pid}) ->
+  Pid;
+translate_process_reference({nameReference, {local, Name}}) ->
+  Name;
+translate_process_reference({nameReference, Name}) ->
+  Name.
 
 translate_stop_reason({stopNormal}) ->
   normal;

@@ -54,15 +54,15 @@ handleInfo ReadRequest state = do
     Right data' -> do
       case parseRequest (UnsafeCoerce.unsafeCoerce data') of
         Right (Request.Insert insertData) -> do
-          sendSelf ReadRequest
+          SimpleServer.sendSelf ReadRequest
           let newPrices = handleInsert insertData state.prices
           state { prices = newPrices } # SimpleServer.noReply # pure
         Right (Request.Query queryData) -> do
-          sendSelf ReadRequest
+          SimpleServer.sendSelf ReadRequest
           state # handleQuery queryData # liftEffect
           state # SimpleServer.noReply # pure
         Left error -> do
-          sendSelf ReadRequest
+          SimpleServer.sendSelf ReadRequest
           let message = "Error parsing request"
           { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
           state # SimpleServer.noReply # pure
@@ -101,7 +101,6 @@ data RecvError
   | RecvErrorTimeout
   | RecvErrorOther Foreign
 
-foreign import sendSelf :: Message -> ProcessM Message Unit
 foreign import parseRequest :: String -> Either InvalidRequest Request
 foreign import meanPriceResponse :: Int -> IOData
 foreign import mapList :: forall a b. (a -> b) -> List a -> List b

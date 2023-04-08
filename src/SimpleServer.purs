@@ -3,6 +3,7 @@ module SimpleServer
   , cast
   , call
   , module SimpleServer.Types
+  , module SimpleServer.Utilities
   ) where
 
 import Prelude
@@ -11,6 +12,7 @@ import Effect (Effect)
 import Erl.Process (Process, ProcessM)
 import Pinto.Types (StartLinkResult)
 import SimpleServer.Types (ServerPid, StartLinkArguments, noReply, reply, stop, initOk, initError)
+import SimpleServer.Utilities (sendSelf)
 
 startLink
   :: forall arguments message state

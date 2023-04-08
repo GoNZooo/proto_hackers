@@ -13,6 +13,9 @@ import Erl.Process.Raw (Pid)
 import Pinto.Supervisor (SupervisorPid)
 import Pinto.Supervisor as Supervisor
 import Pinto.Types (RegistryName(..), StartLinkResult)
+import ProtoHackers.ChatServer as ChatServer
+import ProtoHackers.ChatServer.Client.Supervisor as ChatSessionSupervisor
+import ProtoHackers.ChatServer.Presence as Presence
 import ProtoHackers.EchoServer as EchoServer
 import ProtoHackers.PriceServer as PriceServer
 import ProtoHackers.PriceServer.Session.Supervisor as SessionSupervisor
@@ -40,10 +43,14 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
     , SupervisorHelpers.worker "ProtoHackers.PriceServer" (PriceServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirChatServer.Presence"
         elixirChatServerPresenceStartLink
+    , SupervisorHelpers.worker "ProtoHackers.ChatServer.Presence" (Presence.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirChatServer" elixirChatServerStartLink
     , SupervisorHelpers.supervisor
-        "ProtoHackers.ChatServer.Session.Supervisor"
+        "ProtoHackers.ElixirChatServer.Session.Supervisor"
         elixirChatServerSessionSupervisorStartLink
+    , SupervisorHelpers.supervisor "ProtoHackers.ChatServer.Session.Supervisor"
+        ChatSessionSupervisor.startLink
+    , SupervisorHelpers.worker "ProtoHackers.ChatServer" (ChatServer.startLink {})
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne
