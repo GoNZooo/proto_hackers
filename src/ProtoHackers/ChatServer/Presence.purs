@@ -16,9 +16,8 @@ import Pinto (RegistryName(..), StartLinkResult)
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent(..))
 import ProtoHackers.ChatServer.Presence.Bus as PresenceBus
 import ProtoHackers.ChatServer.Presence.Types (Arguments, Message, State)
-import SimpleGenServer (ServerPid)
-import SimpleGenServer as SimpleServer
-import SimpleServer.Types (InitValue, ProcessReference(..), ReturnValue)
+import SimpleServer.GenServer (InitValue, ProcessReference(..), ReturnValue, ServerPid)
+import SimpleServer.GenServer as SimpleServer
 
 serverName :: RegistryName (ServerPid Message State)
 serverName = "ProtoHackers.ChatServer.Presence" # Atom.atom # Local

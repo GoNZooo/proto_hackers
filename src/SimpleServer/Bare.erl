@@ -1,4 +1,4 @@
--module(simpleServer@foreign).
+-module(simpleServer_bare@foreign).
 
 -export([startLink_/2, cast/2, call/2, serverLoop/3]).
 
@@ -9,7 +9,6 @@ startLink_(StartArguments,
              handleInfo := HandleInfo,
              name := {nothing}}) ->
   fun() ->
-     % spawn a server loop and register it with the given name
      Pid = spawn_link(?MODULE, serverLoop, [StartArguments, Init, HandleInfo]),
      {right, Pid}
   end;
@@ -18,14 +17,13 @@ startLink_(StartArguments,
              handleInfo := HandleInfo,
              name := {just, Name}}) ->
   fun() ->
-     % spawn a server loop and register it with the given name
      MaybePid = get_name(Name),
      case MaybePid of
        Pid when is_pid(Pid) -> {left, {alreadyStarted, Pid}};
        undefined ->
          Pid = spawn_link(?MODULE, serverLoop, [StartArguments, Init, HandleInfo]),
          RegistrationResult = try_register(Name, Pid),
-         translateRegistrationResult(RegistrationResult, Pid)
+         translate_registration_result(RegistrationResult, Pid)
      end
   end.
 
@@ -46,7 +44,7 @@ loop(State, HandleInfo) ->
         {simpleReply, _Reply, _NewState} ->
           throw({reply_not_allowed, {cast, F}});
         {simpleStop, Reason, _NewState} ->
-          exit(translate_stop_reason(Reason))
+          exit(simple_server_utilities:translate_stop_reason(Reason))
       end;
     {call, F, From, Ref} ->
       case ((F(From))(State))() of
@@ -56,7 +54,7 @@ loop(State, HandleInfo) ->
         {simpleNoReply, _NewState} ->
           throw({reply_required, {call, F, From, Ref}});
         {simpleStop, Reason, _NewState} ->
-          exit(translate_stop_reason(Reason))
+          exit(simple_server_utilities:translate_stop_reason(Reason))
       end;
     Message ->
       case ((HandleInfo(Message))(State))() of
@@ -65,19 +63,28 @@ loop(State, HandleInfo) ->
         {simpleReply, _Reply, _NewState} ->
           throw({reply_not_allowed, Message});
         {simpleStop, Reason, _NewState} ->
-          exit(translate_stop_reason(Reason))
+          exit(simple_server_utilities:translate_stop_reason(Reason))
       end
   end.
 
-cast(Pid, F) ->
-  fun() -> Pid ! {cast, F} end.
+cast(PidOrNameReference, F) ->
+  fun() -> send_message_to_name(PidOrNameReference, {cast, F}) end.
 
 call(Pid, F) ->
   fun() ->
      Ref = make_ref(),
      From = self(),
-     Pid ! {call, F, From, Ref},
+     send_message_to_name(Pid, {call, F, From, Ref}),
      receive {simpleReply, Ref, Reply} -> Reply end
+  end.
+
+send_message_to_name(PidOrNameReference, Message) ->
+  Name = simple_server_utilities:translate_process_reference(PidOrNameReference),
+  case get_name(Name) of
+    Pid when is_pid(Pid) ->
+      Pid ! Message;
+    undefined ->
+      throw({unable_to_find_process_with_name, Name})
   end.
 
 get_name({local, Name}) ->
@@ -94,22 +101,15 @@ try_register({global, Name}, Pid) ->
 try_register({via, Module, Name}, Pid) ->
   Module:register(Name, Pid).
 
-translateRegistrationResult({ok, Pid}, Pid) ->
+translate_registration_result({ok, Pid}, Pid) ->
   {right, Pid};
-translateRegistrationResult({error, {already_registered, Pid}}, Pid) ->
+translate_registration_result({error, {already_registered, Pid}}, Pid) ->
   {left, {alreadyStarted, Pid}};
-translateRegistrationResult(true, Pid) ->
+translate_registration_result(true, Pid) ->
   {right, Pid};
-translateRegistrationResult(yes, Pid) ->
+translate_registration_result(yes, Pid) ->
   {right, Pid};
-translateRegistrationResult(false, _Pid) ->
+translate_registration_result(false, _Pid) ->
   {left, {failed, unable_to_register}};
-translateRegistrationResult(no, _Pid) ->
+translate_registration_result(no, _Pid) ->
   {left, {failed, unable_to_register}}.
-
-translate_stop_reason({stopNormal}) ->
-  normal;
-translate_stop_reason({stopShutdown}) ->
-  shutdown;
-translate_stop_reason({stopOther, Reason}) ->
-  Reason.

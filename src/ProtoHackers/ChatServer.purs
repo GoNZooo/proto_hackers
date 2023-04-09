@@ -20,9 +20,8 @@ import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
 import ProtoHackers.ChatServer.Client.Supervisor as ClientSupervisor
 import ProtoHackers.ChatServer.Types (Arguments, Message(..), State)
-import SimpleGenServer (ServerPid)
-import SimpleGenServer as SimpleServer
-import SimpleServer.Types (InitValue, ReturnValue)
+import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid)
+import SimpleServer.GenServer as SimpleServer
 
 serverName :: RegistryName (ServerPid Message State)
 serverName = "ProtoHackers.ChatServer" # Atom.atom # Local

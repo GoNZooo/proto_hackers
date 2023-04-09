@@ -1,4 +1,4 @@
--module(simpleGenServer@foreign).
+-module(simpleServer_genServer@foreign).
 
 -export([startLink_/2, cast/2, call/2, init/1, handle_info/2, handle_cast/2,
          handle_call/3]).
@@ -33,11 +33,12 @@ startLink_(StartArguments,
      end
   end.
 
-cast(Pid, F) ->
-  fun() -> gen_server:cast(Pid, {cast, F}) end.
+cast(PidOrNameReference, F) ->
+  Name = simple_server_utilities:translate_process_reference(PidOrNameReference),
+  fun() -> gen_server:cast(Name, {cast, F}) end.
 
 call(PidOrNameReference, F) ->
-  Name = translate_process_reference(PidOrNameReference),
+  Name = simple_server_utilities:translate_process_reference(PidOrNameReference),
   fun() -> gen_server:call(Name, {call, F}) end.
 
 init({StartArguments, Init, HandleInfo}) ->
@@ -53,7 +54,9 @@ handle_info(Message, #state{state = State, handleInfo = HandleInfo} = ServerStat
     {simpleNoReply, NewState} ->
       {noreply, ServerState#state{state = NewState}};
     {simpleStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), ServerState#state{state = NewState}}
+      {stop,
+       simple_server_utilities:translate_stop_reason(Reason),
+       ServerState#state{state = NewState}}
   end.
 
 handle_cast({cast, F}, #state{state = State} = ServerState) ->
@@ -61,7 +64,9 @@ handle_cast({cast, F}, #state{state = State} = ServerState) ->
     {simpleNoReply, NewState} ->
       {noreply, ServerState#state{state = NewState}};
     {simpleStop, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), ServerState#state{state = NewState}}
+      {stop,
+       simple_server_utilities:translate_stop_reason(Reason),
+       ServerState#state{state = NewState}}
   end.
 
 handle_call({call, F}, From, #state{state = State} = ServerState) ->
@@ -69,19 +74,8 @@ handle_call({call, F}, From, #state{state = State} = ServerState) ->
     {simpleCallReply, Reply, NewState} ->
       {reply, Reply, ServerState#state{state = NewState}};
     {simpleCallStop, Reply, Reason, NewState} ->
-      {stop, translate_stop_reason(Reason), Reply, ServerState#state{state = NewState}}
+      {stop,
+       simple_server_utilities:translate_stop_reason(Reason),
+       Reply,
+       ServerState#state{state = NewState}}
   end.
-
-translate_process_reference({pidReference, Pid}) ->
-  Pid;
-translate_process_reference({nameReference, {local, Name}}) ->
-  Name;
-translate_process_reference({nameReference, Name}) ->
-  Name.
-
-translate_stop_reason({stopNormal}) ->
-  normal;
-translate_stop_reason({stopShutdown}) ->
-  shutdown;
-translate_stop_reason({stopOther, Reason}) ->
-  Reason.

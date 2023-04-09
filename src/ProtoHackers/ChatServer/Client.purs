@@ -27,8 +27,8 @@ import ProtoHackers.ChatServer.Client.Types (Arguments, Message(..), State)
 import ProtoHackers.ChatServer.Presence as Presence
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent(..))
 import ProtoHackers.ChatServer.Presence.Bus as PresenceBus
-import SimpleGenServer as SimpleServer
-import SimpleServer.Types (InitValue, ReturnValue, StopReason(..))
+import SimpleServer.GenServer (InitValue, ReturnValue, StopReason(..))
+import SimpleServer.GenServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult (Process Message))

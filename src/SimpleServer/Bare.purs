@@ -1,8 +1,7 @@
-module SimpleGenServer
+module SimpleServer.Bare
   ( startLink
   , cast
   , call
-  , module SimpleServer.Types
   , module SimpleServer.Utilities
   ) where
 
@@ -11,18 +10,7 @@ import Prelude
 import Effect (Effect)
 import Erl.Process (Process, ProcessM)
 import Pinto.Types (StartLinkResult)
-import SimpleServer.Types
-  ( ProcessReference
-  , Reply
-  , ReturnValue
-  , ServerPid
-  , StartLinkArguments
-  , initError
-  , initOk
-  , noReply
-  , reply
-  , stop
-  )
+import SimpleServer.Types (ProcessReference, Reply, ReturnValue, StartLinkArguments)
 import SimpleServer.Utilities (sendSelf)
 
 startLink
@@ -41,7 +29,7 @@ foreign import startLink_
 
 foreign import cast
   :: forall message state
-   . ServerPid message state
+   . ProcessReference message state
   -> (state -> ProcessM message (ReturnValue state))
   -> Effect Unit
 
