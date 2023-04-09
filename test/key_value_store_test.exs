@@ -7,16 +7,26 @@ defmodule KeyValueStoreTest do
   @tag :key_value_store
   test "implements basics of protocol" do
     port = 4201
+    run_tests(port, "version=ProtoHackers.ElixirKeyValueStore-0.1")
+  end
+
+  @tag :key_value_store
+  test "implements basics of protocol for purescript version" do
+    port = 4200
+    run_tests(port, "version=ProtoHackers.KeyValueStore-1.0 (PureScript/purerl)")
+  end
+
+  defp run_tests(port, expected_version) do
     {:ok, socket} = :gen_udp.open(0, mode: :binary, active: false)
 
     # version
     query(socket, port, "version")
-    assert_data(socket, "version=ProtoHackers.ElixirKeyValueStore-0.1")
+    assert_data(socket, expected_version)
 
     # modifying version does nothing
     insert(socket, port, "version", "other-version-string")
     query(socket, port, "version")
-    assert_data(socket, "version=ProtoHackers.ElixirKeyValueStore-0.1")
+    assert_data(socket, expected_version)
 
     # insert
     insert(socket, port, "key", "value")

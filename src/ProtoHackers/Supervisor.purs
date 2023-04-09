@@ -17,6 +17,7 @@ import ProtoHackers.ChatServer as ChatServer
 import ProtoHackers.ChatServer.Client.Supervisor as ChatSessionSupervisor
 import ProtoHackers.ChatServer.Presence as Presence
 import ProtoHackers.EchoServer as EchoServer
+import ProtoHackers.KeyValueStore as KeyValueStore
 import ProtoHackers.PriceServer as PriceServer
 import ProtoHackers.PriceServer.Session.Supervisor as SessionSupervisor
 import ProtoHackers.PrimeServer as PrimeServer
@@ -52,6 +53,7 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
         ChatSessionSupervisor.startLink
     , SupervisorHelpers.worker "ProtoHackers.ChatServer" (ChatServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirKeyValueStore" elixirKeyValueStoreStartLink
+    , SupervisorHelpers.worker "ProtoHackers.KeyValueStore" (KeyValueStore.startLink {})
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne

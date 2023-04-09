@@ -3,14 +3,22 @@ module ProtoHackers.KeyValueStore.Types
   , Pid
   , State
   , Arguments
+  , Command(..)
   ) where
 
+import Erl.Data.Map (Map)
+import Erl.Kernel.Inet (PassiveSocket)
+import Erl.Kernel.Udp (UdpSocket)
 import SimpleServer.GenServer (ServerPid)
 
-data Message = NoOp
+data Command
+  = Query { key :: String }
+  | Insert { key :: String, value :: String }
 
-type State = { count :: Int }
+data Message = Read
 
-type Arguments = { initialCount :: Int }
+type State = { socket :: UdpSocket PassiveSocket, store :: Map String String }
+
+type Arguments = {}
 
 type Pid = ServerPid Message State
