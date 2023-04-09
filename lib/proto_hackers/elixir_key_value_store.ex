@@ -14,11 +14,6 @@ defmodule ProtoHackers.ElixirKeyValueStore do
   defmodule Commands do
     @max_command_size 1000
 
-    defmodule Version do
-      @enforce_keys []
-      defstruct @enforce_keys
-    end
-
     defmodule Insert do
       @enforce_keys [:key, :value]
       defstruct @enforce_keys
@@ -27,10 +22,6 @@ defmodule ProtoHackers.ElixirKeyValueStore do
     defmodule Query do
       @enforce_keys [:key]
       defstruct @enforce_keys
-    end
-
-    def parse("version") do
-      {:ok, %Version{}}
     end
 
     def parse(value) when is_binary(value) and byte_size(value) < @max_command_size do
@@ -73,11 +64,6 @@ defmodule ProtoHackers.ElixirKeyValueStore do
     case :gen_udp.recv(state.socket, 0, 50) do
       {:ok, {address, port, data}} ->
         case Commands.parse(data) do
-          {:ok, %Commands.Version{}} ->
-            :gen_udp.send(state.socket, address, port, @version_string)
-
-            {:noreply, state}
-
           {:ok, %Commands.Insert{key: key, value: value}} ->
             {:noreply, %State{state | store: Map.put(state.store, key, value)}}
 
@@ -88,6 +74,7 @@ defmodule ProtoHackers.ElixirKeyValueStore do
                 {:noreply, state}
 
               :error ->
+                :gen_udp.send(state.socket, address, port, "#{key}=")
                 {:noreply, state}
             end
 

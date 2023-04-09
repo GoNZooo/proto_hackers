@@ -11,12 +11,12 @@ defmodule KeyValueStoreTest do
 
     # version
     query(socket, port, "version")
-    assert_data(socket, "ProtoHackers.ElixirKeyValueStore-0.1")
+    assert_data(socket, "version=ProtoHackers.ElixirKeyValueStore-0.1")
 
     # modifying version does nothing
     insert(socket, port, "version", "other-version-string")
     query(socket, port, "version")
-    assert_data(socket, "ProtoHackers.ElixirKeyValueStore-0.1")
+    assert_data(socket, "version=ProtoHackers.ElixirKeyValueStore-0.1")
 
     # insert
     insert(socket, port, "key", "value")
