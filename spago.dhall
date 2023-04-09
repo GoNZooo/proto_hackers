@@ -41,6 +41,7 @@ to generate this file without the comments in this block.
   , "purerl-test"
   , "quickcheck"
   , "simple-json"
+  , "simple-server"
   , "strings"
   , "tuples"
   , "unsafe-coerce"
