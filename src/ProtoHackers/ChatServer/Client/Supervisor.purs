@@ -9,6 +9,7 @@ import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..), Seconds(..))
 import Effect (Effect)
 import Erl.Atom as Atom
+import Erl.Process (Process)
 import Pinto (RegistryName(..), RegistryReference(..), StartLinkResult)
 import Pinto.Supervisor
   ( ChildShutdownTimeoutStrategy(..)

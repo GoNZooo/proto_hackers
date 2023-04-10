@@ -18,7 +18,7 @@ import Erl.Data.Set as Set
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
 import Erl.Kernel.Tcp as Tcp
-import Erl.Process (Process, ProcessM)
+import Erl.Process (ProcessM)
 import Erl.Process as Process
 import Foreign (Foreign)
 import Logger as LogType
@@ -31,23 +31,24 @@ import ProtoHackers.PriceServer.Session.Types
   , PriceData
   , Request
   , State
+  , Continue
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer.GenServer (InitValue, ReturnValue, StopReason(..))
+import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid, StopReason(..))
 import SimpleServer.GenServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
-startLink :: Arguments -> Effect (StartLinkResult (Process Message))
+startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
 startLink arguments = do
-  SimpleServer.startLink arguments { init, handleInfo, name: Nothing }
+  SimpleServer.startLink arguments { init, handleInfo, name: Nothing, handleContinue }
 
-init :: Arguments -> ProcessM Message (InitValue State)
+init :: Arguments -> ProcessM Message (InitValue State Continue)
 init { socket } = do
   self' <- Process.self
   liftEffect $ Process.send self' ReadRequest
   pure $ SimpleServer.initOk { socket, prices: Set.empty }
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
 handleInfo ReadRequest state = do
   maybeData <- liftEffect $ recv state.socket 9
   case maybeData of
@@ -74,6 +75,10 @@ handleInfo ReadRequest state = do
       let message = "Error reading from client socket"
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       state # SimpleServer.noReply # pure
+
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue _ state = do
+  state # SimpleServer.noReply # pure
 
 handleInsert :: PriceData -> Set PriceData -> Set PriceData
 handleInsert { timestamp, price } prices = do

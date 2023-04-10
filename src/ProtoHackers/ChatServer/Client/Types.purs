@@ -4,6 +4,7 @@ module ProtoHackers.ChatServer.Client.Types
   , Pid
   , State
   , Arguments
+  , Continue
   ) where
 
 import Prelude
@@ -11,10 +12,12 @@ import Prelude
 import Data.Maybe (Maybe)
 import Erl.Kernel.Inet (ConnectedSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
-import Erl.Process (Process)
 import Erl.Types (Ref)
 import Pinto.GenServer (ServerType)
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent)
+import SimpleServer.GenServer (ServerPid)
+
+type Continue = Unit
 
 data Message
   = ReadUsername
@@ -30,4 +33,4 @@ type State =
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }
 
 type ServerType' = ServerType Unit Unit Message State
-type Pid = Process Message
+type Pid = ServerPid Message State Continue

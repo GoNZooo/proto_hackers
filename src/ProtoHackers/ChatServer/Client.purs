@@ -19,11 +19,11 @@ import Erl.Kernel.Erlang as Erlang
 import Erl.Kernel.Inet as ActiveError
 import Erl.Kernel.Tcp as SocketPacket
 import Erl.Kernel.Tcp as Tcp
-import Erl.Process (Process, ProcessM)
+import Erl.Process (ProcessM)
 import Erl.Types (Timeout(..))
 import Partial.Unsafe as Partial
 import Pinto (StartLinkResult)
-import ProtoHackers.ChatServer.Client.Types (Arguments, Message(..), State)
+import ProtoHackers.ChatServer.Client.Types (Arguments, Continue, Message(..), State, Pid)
 import ProtoHackers.ChatServer.Presence as Presence
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent(..))
 import ProtoHackers.ChatServer.Presence.Bus as PresenceBus
@@ -31,11 +31,11 @@ import SimpleServer.GenServer (InitValue, ReturnValue, StopReason(..))
 import SimpleServer.GenServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
-startLink :: Arguments -> Effect (StartLinkResult (Process Message))
+startLink :: Arguments -> Effect (StartLinkResult Pid)
 startLink arguments = do
-  SimpleServer.startLink arguments { name: Nothing, init, handleInfo }
+  SimpleServer.startLink arguments { name: Nothing, init, handleInfo, handleContinue }
 
-init :: Arguments -> ProcessM Message (InitValue State)
+init :: Arguments -> ProcessM Message (InitValue State Continue)
 init { socket } = do
   ref <- liftEffect Erlang.makeRef
   SimpleServer.sendSelf ReadUsername
@@ -45,7 +45,10 @@ init { socket } = do
 
   { socket, username: Nothing, ref } # SimpleServer.initOk # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue _ state = state # SimpleServer.noReply # pure
+
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
 handleInfo ReadUsername state = do
   maybeData <- liftEffect $ Tcp.recv state.socket 0 (500.0 # wrap # Timeout)
   case maybeData of

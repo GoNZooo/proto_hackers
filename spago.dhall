@@ -30,6 +30,7 @@ to generate this file without the comments in this block.
   , "erl-quickcheck-helpers"
   , "erl-sets"
   , "erl-simplebus"
+  , "erl-tuples"
   , "erl-untagged-union"
   , "foldable-traversable"
   , "foreign"

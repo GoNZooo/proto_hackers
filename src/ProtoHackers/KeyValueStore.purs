@@ -10,28 +10,27 @@ import Data.Maybe as Maybe
 import Data.Newtype (wrap)
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Class.Console as Console
 import Erl.Atom as Atom
 import Erl.Data.Binary (Binary)
 import Erl.Data.Binary.IOData as IOData
 import Erl.Data.List as List
 import Erl.Data.Map as Map
-import Erl.Kernel.Inet (HostAddress, Ip4Address(..), Ip6Address(..), IpAddressUnion, Port(..))
+import Erl.Kernel.Inet (HostAddress, IpAddressUnion, Port)
 import Erl.Kernel.Inet as HostAddress
 import Erl.Kernel.Inet as IpAddress
 import Erl.Kernel.Udp (UdpRecvData)
 import Erl.Kernel.Udp as ReceiveError
 import Erl.Kernel.Udp as Udp
 import Erl.Kernel.Udp as UdpRecvData
-import Erl.Process (Process, ProcessM)
+import Erl.Process (ProcessM)
 import Erl.Types (Timeout(..))
 import Erl.Untagged.Union as Union
 import Foreign as Foreign
 import Logger as LogType
 import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
-import ProtoHackers.KeyValueStore.Types (Arguments, Command(..), Message(..), Pid, State)
-import SimpleServer.GenServer (InitValue, ReturnValue)
+import ProtoHackers.KeyValueStore.Types (Arguments, Command(..), Message(..), Pid, State, Continue)
+import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid)
 import SimpleServer.GenServer as SimpleServer
 import SimpleServer.Types as StopReason
 import Unsafe.Coerce as Coerce
@@ -42,11 +41,11 @@ version = "ProtoHackers.KeyValueStore-1.0 (PureScript/purerl)"
 serverName :: RegistryName Pid
 serverName = "ProtoHackers.KeyValueStore" # Atom.atom # Local
 
-startLink :: Arguments -> Effect (StartLinkResult (Process Message))
+startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
 startLink arguments = do
-  SimpleServer.startLink arguments { name: Just serverName, init, handleInfo }
+  SimpleServer.startLink arguments { name: Just serverName, init, handleInfo, handleContinue }
 
-init :: Arguments -> ProcessM Message (InitValue State)
+init :: Arguments -> ProcessM Message (InitValue State Continue)
 init {} = do
   maybeSocket <- liftEffect $ Udp.openPassive (wrap 4200) { reuseaddr: true }
   case maybeSocket of
@@ -60,7 +59,7 @@ init {} = do
       { error, message } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       error # SimpleServer.initError # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
 handleInfo Read state = do
   SimpleServer.sendSelf Read
 
@@ -96,6 +95,10 @@ handleInfo Read state = do
       state
         # SimpleServer.stop ("posix_error" # Foreign.unsafeToForeign # StopReason.StopOther)
         # pure
+
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue _ state = do
+  state # SimpleServer.noReply # pure
 
 getHost :: IpAddressUnion -> HostAddress
 getHost =

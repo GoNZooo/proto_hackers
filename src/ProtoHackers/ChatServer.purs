@@ -13,24 +13,24 @@ import Erl.Atom as Atom
 import Erl.Data.List as List
 import Erl.Kernel.Tcp as SocketPacket
 import Erl.Kernel.Tcp as Tcp
-import Erl.Process (Process, ProcessM)
+import Erl.Process (ProcessM)
 import Erl.Types (Timeout(..))
 import Logger as LogType
 import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
 import ProtoHackers.ChatServer.Client.Supervisor as ClientSupervisor
-import ProtoHackers.ChatServer.Types (Arguments, Message(..), State)
+import ProtoHackers.ChatServer.Types (Arguments, Message(..), Pid, State, Continue)
 import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid)
 import SimpleServer.GenServer as SimpleServer
 
-serverName :: RegistryName (ServerPid Message State)
+serverName :: RegistryName Pid
 serverName = "ProtoHackers.ChatServer" # Atom.atom # Local
 
-startLink :: Arguments -> Effect (StartLinkResult (Process Message))
+startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
 startLink arguments = do
-  SimpleServer.startLink arguments { init, handleInfo, name: Just serverName }
+  SimpleServer.startLink arguments { name: Just serverName, init, handleInfo, handleContinue }
 
-init :: Arguments -> ProcessM Message (InitValue State)
+init :: Arguments -> ProcessM Message (InitValue State Continue)
 init {} = do
   maybeSocket <-
     { exit_on_close: false, reuseaddr: true, packet: Just SocketPacket.Line }
@@ -44,7 +44,10 @@ init {} = do
       { socket } # SimpleServer.initOk # pure
     Left error -> error # SimpleServer.initError # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue _ state = state # SimpleServer.noReply # pure
+
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
 handleInfo Accept state = do
   SimpleServer.sendSelf Accept
   maybeSocket <- Tcp.acceptPassive state.socket InfiniteTimeout # liftEffect
