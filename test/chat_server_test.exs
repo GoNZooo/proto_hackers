@@ -78,12 +78,15 @@ defmodule ChatServerTest do
     :gen_tcp.send(socket, " \n")
     assert_closed(socket)
 
+    # subscribe to presence events
+    :protoHackers_chatServer_presence_bus@ps.subscribe(self(), fn e -> e end).()
+
     # User 1 joins
     socket = connect(port)
     assert_welcome(socket)
     :gen_tcp.send(socket, "validUsername1\n")
     assert_data(socket, "* Users: ")
-    assert_purs_users(["validUsername1"])
+    assert_receive({:userJoined, %{username: "validUsername1"}})
 
     # User 2 joins
     socket2 = connect(port)
@@ -115,8 +118,8 @@ defmodule ChatServerTest do
     socket3 = connect(port)
     assert_welcome(socket3)
     :gen_tcp.close(socket3)
-    assert_timeout(socket2, 100)
-    assert_timeout(socket, 100)
+    assert_timeout(socket2, 10)
+    assert_timeout(socket, 10)
   end
 
   defp connect(port) do
@@ -127,12 +130,12 @@ defmodule ChatServerTest do
   end
 
   defp assert_welcome(socket) do
-    {:ok, data} = :gen_tcp.recv(socket, 0)
+    {:ok, data} = :gen_tcp.recv(socket, 0, 250)
     assert data == "Welcome! What is your username?\n"
   end
 
   defp assert_closed(socket) do
-    {:error, :closed} = :gen_tcp.recv(socket, 0)
+    {:error, :closed} = :gen_tcp.recv(socket, 0, 250)
   end
 
   defp assert_data(socket, expected) do

@@ -1,5 +1,5 @@
 defmodule KeyValueStoreTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   @timeout 50
   @max_command_size 1000

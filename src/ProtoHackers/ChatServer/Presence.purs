@@ -7,6 +7,7 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Effect.Class (liftEffect)
 import Erl.Atom as Atom
 import Erl.Data.List (List)
 import Erl.Data.List as List
@@ -36,7 +37,8 @@ getUsers = SimpleServer.call (NameReference serverName) \_from state@{ users } -
 
 init :: Arguments -> ProcessM Message (InitValue State Continue)
 init {} = do
-  _subscriptionRef <- PresenceBus.subscribe identity
+  self <- SimpleServer.self
+  liftEffect $ PresenceBus.subscribe self identity
   { users: Map.empty } # SimpleServer.initOk # pure
 
 handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)

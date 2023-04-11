@@ -1,6 +1,5 @@
 module ProtoHackers.ChatServer.Presence.Bus
-  ( bus
-  , subscribe
+  ( subscribe
   , unsubscribe
   , publish
   , UserEvent(..)
@@ -8,32 +7,41 @@ module ProtoHackers.ChatServer.Presence.Bus
 
 import Prelude
 
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 import Effect (Effect)
-import Effect.Class (class MonadEffect)
-import Erl.Process (class HasSelf)
+import Erl.Atom (Atom)
+import Erl.Atom as Atom
+import Erl.Process (Process)
 import Erl.Types (Ref)
-import SimpleBus (Bus, SubscriptionRef)
-import SimpleBus as SimpleBus
+import PgBus (Bus)
+import PgBus as PgBus
 
 data UserEvent
   = UserJoined { ref :: Ref, username :: String }
   | UserLeft { ref :: Ref, username :: String }
   | UserSentMessage { ref :: Ref, username :: String, message :: String }
 
-bus :: Bus Unit UserEvent
-bus = SimpleBus.bus unit
+derive instance Generic UserEvent _
+
+instance Show UserEvent where
+  show = genericShow
+
+bus :: Bus Atom UserEvent
+bus = PgBus.bus (Atom.atom "ProtoHackers.ChatServer.Presence.Bus")
 
 subscribe
-  :: forall message m
-   . HasSelf m message
-  => MonadEffect m
-  => (UserEvent -> message)
-  -> m SubscriptionRef
-subscribe f = SimpleBus.subscribe bus f
+  :: forall message
+   . Process message
+  -> (UserEvent -> message)
+  -> Effect Unit
+subscribe pid f = do
+  PgBus.subscribe bus f pid
 
-unsubscribe :: SubscriptionRef -> Effect Unit
-unsubscribe = SimpleBus.unsubscribe
+unsubscribe :: forall message. Process message -> Effect Unit
+unsubscribe pid = PgBus.unsubscribe bus pid
 
 publish :: UserEvent -> Effect Unit
-publish message = SimpleBus.raise bus message
+publish message = do
+  PgBus.publish bus message
 

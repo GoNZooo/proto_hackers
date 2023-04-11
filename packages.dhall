@@ -118,6 +118,10 @@ let simple-server =
       https://raw.githubusercontent.com/GoNZooo/purescript-erl-simple-server/v0.1.1/spago.dhall
         sha256:32b6cc24c324afcc101d850901f6ea931adbf34242dfc7622a1dac23c4480efb
 
+let pg-bus =
+      https://raw.githubusercontent.com/GoNZooo/purescript-erl-pg-bus/v0.1.0/spago.dhall
+        sha256:52172861158a87eb012f5b4d39ba8dcad040ba91f84f649091bfa7dbeea98684
+
 let overrides =
       { erl-quickcheck-helpers =
         { repo =
@@ -149,6 +153,11 @@ let overrides =
         { dependencies = simple-server.dependencies
         , repo = "https://github.com/GoNZooo/purescript-erl-simple-server.git"
         , version = "v0.1.1"
+        }
+      , pg-bus =
+        { dependencies = pg-bus.dependencies
+        , repo = "https://github.com/GoNZooo/purescript-erl-pg-bus.git"
+        , version = "v0.1.0"
         }
       }
 

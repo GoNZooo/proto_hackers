@@ -65,7 +65,8 @@ handleInfo ReadUsername state = do
               # (\s -> "* Users: " <> s <> "\n")
               # IOData.fromString
         Tcp.send state.socket userListMessage # void # liftEffect
-        _subscriptionRef <- PresenceBus.subscribe PresenceEvent
+        self <- SimpleServer.self
+        liftEffect $ PresenceBus.subscribe self PresenceEvent
         SimpleServer.sendSelf ReadChatMessage
         state { username = Just username } # SimpleServer.noReply # pure
       else do
