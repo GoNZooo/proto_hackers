@@ -54,6 +54,9 @@ startLink = Supervisor.startLink (Just $ Local $ atom supervisorName) $ pure sup
     , SupervisorHelpers.worker "ProtoHackers.ChatServer" (ChatServer.startLink {})
     , SupervisorHelpers.worker "ProtoHackers.ElixirKeyValueStore" elixirKeyValueStoreStartLink
     , SupervisorHelpers.worker "ProtoHackers.KeyValueStore" (KeyValueStore.startLink {})
+    , SupervisorHelpers.supervisor "ProtoHackers.ElixirChatProxy.Client.Supervisor"
+        elixirChatProxyClientSupervisorStartLink
+    , SupervisorHelpers.worker "ProtoHackers.ElixirChatProxy" elixirChatProxyStartLink
     ]
   flags = { strategy, intensity, period }
   strategy = Supervisor.OneForOne
@@ -69,3 +72,5 @@ foreign import elixirChatServerSessionSupervisorStartLink :: Effect (StartLinkRe
 foreign import elixirChatServerPresenceStartLink :: Effect (StartLinkResult Pid)
 foreign import pgStartLink :: Effect (StartLinkResult Pid)
 foreign import elixirKeyValueStoreStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirChatProxyClientSupervisorStartLink :: Effect (StartLinkResult Pid)
+foreign import elixirChatProxyStartLink :: Effect (StartLinkResult Pid)

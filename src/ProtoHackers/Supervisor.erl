@@ -3,7 +3,8 @@
 -export([elixirEchoServerStartLink/0, elixirPrimeServerStartLink/0,
          elixirPriceServerStartLink/0, elixirPriceSessionSupervisorStartLink/0,
          elixirChatServerStartLink/0, elixirChatServerSessionSupervisorStartLink/0,
-         elixirChatServerPresenceStartLink/0, pgStartLink/0, elixirKeyValueStoreStartLink/0]).
+         elixirChatServerPresenceStartLink/0, pgStartLink/0, elixirKeyValueStoreStartLink/0,
+         elixirChatProxyClientSupervisorStartLink/0, elixirChatProxyStartLink/0]).
 
 elixirEchoServerStartLink() ->
   fun() ->
@@ -72,6 +73,22 @@ pgStartLink() ->
 elixirKeyValueStoreStartLink() ->
   fun() ->
      case 'Elixir.ProtoHackers.ElixirKeyValueStore':start_link() of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+elixirChatProxyClientSupervisorStartLink() ->
+  fun() ->
+     case 'Elixir.ProtoHackers.ElixirChatProxy.Client.Supervisor':start_link() of
+       {ok, Pid} -> {right, Pid};
+       {error, Reason} -> {left, Reason}
+     end
+  end.
+
+elixirChatProxyStartLink() ->
+  fun() ->
+     case 'Elixir.ProtoHackers.ElixirChatProxy':start_link() of
        {ok, Pid} -> {right, Pid};
        {error, Reason} -> {left, Reason}
      end
