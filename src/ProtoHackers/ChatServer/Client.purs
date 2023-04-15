@@ -23,7 +23,7 @@ import Erl.Process (ProcessM)
 import Erl.Types (Timeout(..))
 import Partial.Unsafe as Partial
 import Pinto (StartLinkResult)
-import ProtoHackers.ChatServer.Client.Types (Arguments, Continue, Message(..), State, Pid)
+import ProtoHackers.ChatServer.Client.Types (Arguments, Continue, Message(..), Pid, State, Stop)
 import ProtoHackers.ChatServer.Presence as Presence
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent(..))
 import ProtoHackers.ChatServer.Presence.Bus as PresenceBus
@@ -33,9 +33,9 @@ import Unsafe.Coerce as UnsafeCoerce
 
 startLink :: Arguments -> Effect (StartLinkResult Pid)
 startLink arguments = do
-  SimpleServer.startLink arguments { name: Nothing, init, handleInfo, handleContinue }
+  SimpleServer.startLink arguments { name: Nothing, init, handleInfo, handleContinue, terminate }
 
-init :: Arguments -> ProcessM Message (InitValue State Continue)
+init :: Arguments -> ProcessM Message (InitValue State Continue Stop)
 init { socket } = do
   ref <- liftEffect Erlang.makeRef
   SimpleServer.sendSelf ReadUsername
@@ -45,10 +45,10 @@ init { socket } = do
 
   { socket, username: Nothing, ref } # SimpleServer.initOk # pure
 
-handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleContinue _ state = state # SimpleServer.noReply # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleInfo ReadUsername state = do
   maybeData <- liftEffect $ Tcp.recv state.socket 0 (500.0 # wrap # Timeout)
   case maybeData of
@@ -118,6 +118,9 @@ handleInfo (PresenceEvent (UserSentMessage { ref, username, message })) state@{ 
       # void
       # liftEffect
   state # SimpleServer.noReply # pure
+
+terminate :: StopReason Stop -> State -> ProcessM Message Unit
+terminate _ _ = pure unit
 
 isValidUsername :: String -> Boolean
 isValidUsername username =

@@ -26,29 +26,31 @@ import Logger as Logger
 import Pinto (StartLinkResult)
 import ProtoHackers.PriceServer.Session.Types
   ( Arguments
+  , Continue
   , InvalidRequest
   , Message(..)
   , PriceData
   , Request
   , State
-  , Continue
+  , Stop
+  , Pid
   )
 import ProtoHackers.PriceServer.Session.Types as Request
-import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid, StopReason(..))
+import SimpleServer.GenServer (InitValue, ReturnValue, StopReason(..))
 import SimpleServer.GenServer as SimpleServer
 import Unsafe.Coerce as UnsafeCoerce
 
-startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
+startLink :: Arguments -> Effect (StartLinkResult Pid)
 startLink arguments = do
-  SimpleServer.startLink arguments { init, handleInfo, name: Nothing, handleContinue }
+  SimpleServer.startLink arguments { init, handleInfo, name: Nothing, handleContinue, terminate }
 
-init :: Arguments -> ProcessM Message (InitValue State Continue)
+init :: Arguments -> ProcessM Message (InitValue State Continue Stop)
 init { socket } = do
   self' <- Process.self
   liftEffect $ Process.send self' ReadRequest
   pure $ SimpleServer.initOk { socket, prices: Set.empty }
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleInfo ReadRequest state = do
   maybeData <- liftEffect $ recv state.socket 9
   case maybeData of
@@ -76,7 +78,7 @@ handleInfo ReadRequest state = do
       { message, error } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       state # SimpleServer.noReply # pure
 
-handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleContinue _ state = do
   state # SimpleServer.noReply # pure
 
@@ -100,6 +102,9 @@ handleQuery { minimumTimestamp, maximumTimestamp } { socket, prices } = do
         # sumList
         # (_ / List.length pricesInRange)
   meanPrice # meanPriceResponse # Tcp.send socket # void
+
+terminate :: StopReason Stop -> State -> ProcessM Message Unit
+terminate _ _ = pure unit
 
 data RecvError
   = RecvErrorClosed

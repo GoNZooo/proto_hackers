@@ -29,8 +29,16 @@ import Foreign as Foreign
 import Logger as LogType
 import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
-import ProtoHackers.KeyValueStore.Types (Arguments, Command(..), Message(..), Pid, State, Continue)
-import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid)
+import ProtoHackers.KeyValueStore.Types
+  ( Arguments
+  , Command(..)
+  , Continue
+  , Message(..)
+  , State
+  , Stop
+  , Pid
+  )
+import SimpleServer.GenServer (InitValue, ReturnValue, StopReason)
 import SimpleServer.GenServer as SimpleServer
 import SimpleServer.Types as StopReason
 import Unsafe.Coerce as Coerce
@@ -41,11 +49,13 @@ version = "ProtoHackers.KeyValueStore-1.0 (PureScript/purerl)"
 serverName :: RegistryName Pid
 serverName = "ProtoHackers.KeyValueStore" # Atom.atom # Local
 
-startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
+startLink :: Arguments -> Effect (StartLinkResult Pid)
 startLink arguments = do
-  SimpleServer.startLink arguments { name: Just serverName, init, handleInfo, handleContinue }
+  SimpleServer.startLink
+    arguments
+    { name: Just serverName, init, handleInfo, handleContinue, terminate }
 
-init :: Arguments -> ProcessM Message (InitValue State Continue)
+init :: Arguments -> ProcessM Message (InitValue State Continue Stop)
 init {} = do
   maybeSocket <- liftEffect $ Udp.openPassive (wrap 4200) { reuseaddr: true }
   case maybeSocket of
@@ -59,7 +69,7 @@ init {} = do
       { error, message } # Logger.error { domain: List.nil, type: LogType.Trace } # liftEffect
       error # SimpleServer.initError # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleInfo Read state = do
   SimpleServer.sendSelf Read
 
@@ -96,9 +106,12 @@ handleInfo Read state = do
         # SimpleServer.stop ("posix_error" # Foreign.unsafeToForeign # StopReason.StopOther)
         # pure
 
-handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleContinue _ state = do
   state # SimpleServer.noReply # pure
+
+terminate :: StopReason Stop -> State -> ProcessM Message Unit
+terminate _ _ = pure unit
 
 getHost :: IpAddressUnion -> HostAddress
 getHost =

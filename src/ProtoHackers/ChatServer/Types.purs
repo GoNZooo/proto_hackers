@@ -5,6 +5,7 @@ module ProtoHackers.ChatServer.Types
   , State
   , Arguments
   , Continue
+  , Stop
   ) where
 
 import Prelude
@@ -13,6 +14,8 @@ import Erl.Kernel.Inet (ListenSocket, PassiveSocket)
 import Erl.Kernel.Tcp (TcpSocket)
 import Pinto.GenServer (ServerType)
 import SimpleServer.GenServer (ServerPid)
+
+type Stop = Void
 
 type Continue = Unit
 
@@ -23,4 +26,4 @@ type State = { socket :: TcpSocket PassiveSocket ListenSocket }
 type Arguments = {}
 
 type ServerType' = ServerType Unit Unit Message State
-type Pid = ServerPid Message State Continue
+type Pid = ServerPid Message State Continue Stop

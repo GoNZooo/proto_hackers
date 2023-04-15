@@ -5,6 +5,7 @@ module ProtoHackers.ChatServer.Presence.Types
   , State
   , Arguments
   , Continue
+  , Stop
   ) where
 
 import Prelude
@@ -15,6 +16,8 @@ import Pinto.GenServer (ServerType)
 import ProtoHackers.ChatServer.Presence.Bus as PresenceBus
 import SimpleServer.GenServer (ServerPid)
 
+type Stop = Void
+
 type Continue = Unit
 
 type Message = PresenceBus.UserEvent
@@ -24,4 +27,4 @@ type State = { users :: Map Ref String }
 type Arguments = {}
 
 type ServerType' = ServerType Unit Unit Message State
-type Pid = ServerPid Message State Continue
+type Pid = ServerPid Message State Continue Stop

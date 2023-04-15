@@ -19,18 +19,20 @@ import Logger as LogType
 import Logger as Logger
 import Pinto (RegistryName(..), StartLinkResult)
 import ProtoHackers.ChatServer.Client.Supervisor as ClientSupervisor
-import ProtoHackers.ChatServer.Types (Arguments, Message(..), Pid, State, Continue)
-import SimpleServer.GenServer (InitValue, ReturnValue, ServerPid)
+import ProtoHackers.ChatServer.Types (Arguments, Continue, Message(..), Pid, State, Stop)
+import SimpleServer.GenServer (InitValue, ReturnValue, StopReason)
 import SimpleServer.GenServer as SimpleServer
 
 serverName :: RegistryName Pid
 serverName = "ProtoHackers.ChatServer" # Atom.atom # Local
 
-startLink :: Arguments -> Effect (StartLinkResult (ServerPid Message State Continue))
+startLink :: Arguments -> Effect (StartLinkResult Pid)
 startLink arguments = do
-  SimpleServer.startLink arguments { name: Just serverName, init, handleInfo, handleContinue }
+  SimpleServer.startLink
+    arguments
+    { name: Just serverName, init, handleInfo, handleContinue, terminate }
 
-init :: Arguments -> ProcessM Message (InitValue State Continue)
+init :: Arguments -> ProcessM Message (InitValue State Continue Stop)
 init {} = do
   maybeSocket <-
     { exit_on_close: false, reuseaddr: true, packet: Just SocketPacket.Line }
@@ -44,10 +46,10 @@ init {} = do
       { socket } # SimpleServer.initOk # pure
     Left error -> error # SimpleServer.initError # pure
 
-handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue)
+handleContinue :: Continue -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleContinue _ state = state # SimpleServer.noReply # pure
 
-handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue)
+handleInfo :: Message -> State -> ProcessM Message (ReturnValue State Continue Stop)
 handleInfo Accept state = do
   SimpleServer.sendSelf Accept
   maybeSocket <- Tcp.acceptPassive state.socket InfiniteTimeout # liftEffect
@@ -61,3 +63,6 @@ handleInfo Accept state = do
         # Logger.error { domain: List.nil, type: LogType.Trace }
         # liftEffect
       state # SimpleServer.noReply # pure
+
+terminate :: StopReason Stop -> State -> ProcessM Message Unit
+terminate _ _ = pure unit

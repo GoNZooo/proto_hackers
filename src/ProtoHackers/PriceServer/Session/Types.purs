@@ -8,6 +8,7 @@ module ProtoHackers.PriceServer.Session.Types
   , Request(..)
   , InvalidRequest(..)
   , PriceData
+  , Stop
   ) where
 
 import Prelude
@@ -21,6 +22,8 @@ import Erl.Kernel.Tcp (TcpSocket)
 import Pinto.GenServer (ServerType)
 import SimpleServer.GenServer (ServerPid)
 
+type Stop = Void
+
 data Message = ReadRequest
 
 type Continue = Unit
@@ -33,7 +36,7 @@ type State =
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }
 
 type ServerType' = ServerType Message Unit Message State
-type Pid = ServerPid Message State Continue
+type Pid = ServerPid Message State Continue Stop
 
 data Request
   = Insert PriceData

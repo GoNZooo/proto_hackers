@@ -5,6 +5,7 @@ module ProtoHackers.ChatServer.Client.Types
   , State
   , Arguments
   , Continue
+  , Stop
   ) where
 
 import Prelude
@@ -16,6 +17,8 @@ import Erl.Types (Ref)
 import Pinto.GenServer (ServerType)
 import ProtoHackers.ChatServer.Presence.Bus (UserEvent)
 import SimpleServer.GenServer (ServerPid)
+
+type Stop = Void
 
 type Continue = Unit
 
@@ -33,4 +36,4 @@ type State =
 type Arguments = { socket :: TcpSocket PassiveSocket ConnectedSocket }
 
 type ServerType' = ServerType Unit Unit Message State
-type Pid = ServerPid Message State Continue
+type Pid = ServerPid Message State Continue Stop
